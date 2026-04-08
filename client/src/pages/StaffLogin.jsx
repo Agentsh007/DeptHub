@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { Loader, Toast } from '../components/UI';
 
@@ -69,6 +69,23 @@ const StaffLogin = () => {
     return (
         <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
             <div className="glass-panel" style={{ width: '100%', maxWidth: '400px' }}>
+                <button
+                    onClick={() => navigate(-1)}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-dim)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        fontSize: '0.9rem',
+                        padding: '0',
+                        marginBottom: '1rem',
+                    }}
+                >
+                    <FaArrowLeft size={14} /> Back
+                </button>
                 <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                     {isRegister ? 'Faculty/Staff Registration' : 'Faculty/Staff Login'}
                 </h2>
