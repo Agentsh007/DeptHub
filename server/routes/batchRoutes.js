@@ -42,7 +42,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Get all batches
 // @access  Staff
 router.get('/', auth, async (req, res) => {
-    if (!['COORDINATOR', 'TEACHER', 'CHAIRMAN', 'CC'].includes(req.user.role)) {
+    if (!['COORDINATOR', 'TEACHER', 'CHAIRMAN', 'CC', 'COMPUTER_OPERATOR'].includes(req.user.role)) {
         return res.status(403).json({ msg: 'Access denied' });
     }
 
