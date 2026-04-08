@@ -38,7 +38,7 @@ const Home = () => {
                             {!user ? (
                                 <>
                                     <button onClick={() => navigate('/staff-login')} className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.05rem', borderRadius: '50px', background: '#ea580c', boxShadow: '0 10px 20px -5px rgba(234, 88, 12, 0.35)' }}>
-                                        Staff Login
+                                        Faculty/Staff Login
                                     </button>
                                     <button onClick={() => navigate('/batch-login')} className="btn-secondary" style={{ padding: '1rem 2.5rem', fontSize: '1.05rem', borderRadius: '50px' }}>
                                         Batch Login

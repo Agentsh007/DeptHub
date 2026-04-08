@@ -76,7 +76,9 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
 
         const result = await cloudinary.uploader.upload(dataURI, {
             public_id: finalPublicId,
-            resource_type: resourceType
+            resource_type: resourceType,
+            access_mode: 'public', // এটি নিশ্চিত করে ফাইলটি পাবলিক হবে
+            type: 'upload'         // পাবলিক ফাইলের জন্য টাইপ সবসময় 'upload' হয়
         });
 
         console.log('[DocUpload] Success:', result.secure_url);

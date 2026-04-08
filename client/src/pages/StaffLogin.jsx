@@ -70,7 +70,7 @@ const StaffLogin = () => {
         <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
             <div className="glass-panel" style={{ width: '100%', maxWidth: '400px' }}>
                 <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                    {isRegister ? 'Staff Registration' : 'Staff Login'}
+                    {isRegister ? 'Faculty/Staff Registration' : 'Faculty/Staff Login'}
                 </h2>
                 {error && <Toast message={error} onClose={() => setError('')} />}
 
