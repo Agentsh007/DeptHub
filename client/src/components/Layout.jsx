@@ -112,12 +112,11 @@ export const Header = () => {
                         </>
                     ) : user?.role === 'TEACHER' ? (
                         <>
-                            <button onClick={() => navigate('/teacher?tab=new-upload')} className={activeTab === 'new-upload' ? '' : 'nav-link'} style={getLinkStyle('new-upload')}>Resource Upload</button>
-                            <button onClick={() => navigate('/teacher?tab=my-uploads')} className={activeTab === 'my-uploads' ? '' : 'nav-link'} style={getLinkStyle('my-uploads')}>My Resources</button>
-                            <button onClick={() => navigate('/teacher?tab=class-updates')} className={activeTab === 'class-updates' ? '' : 'nav-link'} style={getLinkStyle('class-updates')}>Class Updates</button>
-                            <button onClick={() => navigate('/teacher?tab=routine')} className={activeTab === 'routine' ? '' : 'nav-link'} style={getLinkStyle('routine')}>My Routines</button>
-                            <button onClick={() => navigate('/teacher?tab=peer-review')} className={activeTab === 'peer-review' ? '' : 'nav-link'} style={getLinkStyle('peer-review')}>Peer Review</button>
+                            <button onClick={() => navigate('/teacher?tab=announcement')} className={activeTab === 'announcement' ? '' : 'nav-link'} style={getLinkStyle('announcement')}>Announcements</button>
+                            <button onClick={() => navigate('/teacher?tab=new-upload')} className={activeTab === 'new-upload' ? '' : 'nav-link'} style={getLinkStyle('new-upload')}>New Upload</button>
+                            <button onClick={() => navigate('/teacher?tab=my-uploads')} className={activeTab === 'my-uploads' ? '' : 'nav-link'} style={getLinkStyle('my-uploads')}>My Upload</button>
                             <button onClick={() => navigate('/teacher?tab=notices')} className={activeTab === 'notices' ? '' : 'nav-link'} style={getLinkStyle('notices')}>Notices</button>
+                            <button onClick={() => navigate('/teacher?tab=routine')} className={activeTab === 'routine' ? '' : 'nav-link'} style={getLinkStyle('routine')}>Routine</button>
                         </>
                     ) : user?.role === 'CHAIRMAN' ? (
                         <>
@@ -136,7 +135,6 @@ export const Header = () => {
                         <>
                             <button onClick={() => scrollToSection('home-hero')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', color: 'var(--text-main)' }}>Home</button>
                             <button onClick={() => scrollToSection('services')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', color: 'var(--text-main)' }}>Services</button>
-                            <button onClick={() => scrollToSection('notices')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', color: 'var(--text-main)' }}>Notices</button>
                             <button onClick={() => scrollToSection('contact')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', color: 'var(--text-main)' }}>Contact</button>
                         </>
                     )}
@@ -235,7 +233,6 @@ export const Header = () => {
                     <>
                         <button onClick={() => scrollToSection('home-hero')} className="mobile-nav-link">Home</button>
                         <button onClick={() => scrollToSection('services')} className="mobile-nav-link">Services</button>
-                        <button onClick={() => scrollToSection('notices')} className="mobile-nav-link">Notices</button>
                         <button onClick={() => scrollToSection('contact')} className="mobile-nav-link">Contact</button>
                     </>
                 )}

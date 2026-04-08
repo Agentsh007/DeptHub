@@ -68,10 +68,27 @@ const App = () => {
             path="/batch/teacher/:teacherId"
             element={<PrivateRoute role="BATCH"><BatchFiles /></PrivateRoute>}
           />
+          {/* Fallback/Central Dashboard Route */}
+          <Route path="/dashboard" element={<DashboardRedirect />} />
         </Routes>
       </Router>
     </AuthProvider>
   );
+};
+
+// Redirect /dashboard to specific role dashboard
+const DashboardRedirect = () => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) return <Loader />;
+  if (!user) return <Navigate to="/" />;
+
+  if (user.role === 'CHAIRMAN') return <Navigate to="/chairman" />;
+  if (user.role === 'COMPUTER_OPERATOR') return <Navigate to="/operator" />;
+  if (user.role === 'TEACHER') return <Navigate to="/teacher" />;
+  if (user.role === 'BATCH') return <Navigate to="/batch" />;
+
+  return <Navigate to="/" />;
 };
 
 export default App;

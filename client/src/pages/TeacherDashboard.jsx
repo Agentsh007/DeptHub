@@ -4,7 +4,108 @@ import { AuthContext } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Loader, ConfirmModal } from '../components/UI';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCloudUploadAlt, FaFilePdf, FaTrash, FaEye, FaEdit, FaUser, FaEnvelope, FaBuilding, FaIdBadge } from 'react-icons/fa';
+import { FaCloudUploadAlt, FaFilePdf, FaTrash, FaFolder, FaPaperclip, FaFileImage, FaFileWord, FaFileExcel, FaFilePowerpoint, FaFileArchive, FaFileCode, FaFileVideo, FaFileAudio, FaFileAlt } from 'react-icons/fa';
+
+/* ─── Shared Inline Styles ─── */
+const s = {
+    wrapper: { maxWidth: '900px', margin: '0 auto', padding: '1rem 1rem 4rem' },
+    outerCard: {
+        background: '#fff', borderRadius: '18px', border: '1px solid #ffe0cc',
+        padding: '2rem 2rem 2.5rem', marginBottom: '2rem',
+    },
+    sectionTitle: {
+        fontFamily: "'Georgia', serif", fontStyle: 'italic', fontSize: '1.35rem',
+        color: '#ea580c', fontWeight: '600', marginBottom: '1.5rem',
+    },
+    label: { display: 'block', marginBottom: '0.4rem', fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' },
+    input: {
+        width: '100%', padding: '0.85rem 1rem', borderRadius: '10px',
+        border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.95rem',
+        outline: 'none', boxSizing: 'border-box',
+    },
+    textarea: {
+        width: '100%', padding: '0.85rem 1rem', borderRadius: '10px',
+        border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.95rem',
+        resize: 'none', outline: 'none', boxSizing: 'border-box',
+    },
+    submitBtn: {
+        display: 'block', width: '100%', maxWidth: '320px', margin: '1.5rem auto 0',
+        padding: '0.85rem 2rem', background: '#ea580c', color: '#fff', border: 'none',
+        borderRadius: '10px', fontWeight: '700', fontSize: '0.95rem', cursor: 'pointer',
+        textAlign: 'center',
+    },
+    uploadZone: {
+        border: '2px dashed #fed7aa', background: '#fff7ed', borderRadius: '14px',
+        padding: '3rem 2rem', textAlign: 'center', cursor: 'pointer',
+    },
+    attachBtn: {
+        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+        padding: '0.5rem 1.25rem',
+        background: 'linear-gradient(135deg, #fef3c7 0%, #ffedd5 100%)',
+        color: '#b45309', borderRadius: '8px', textDecoration: 'none',
+        fontSize: '0.85rem', fontWeight: '600', border: '1px solid #fcd34d',
+        marginTop: '0.75rem',
+    },
+    batchBadge: (active) => ({
+        display: 'inline-block', padding: '0.35rem 1.1rem', borderRadius: '8px',
+        fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer', border: 'none',
+        background: active ? '#ea580c' : '#fff7ed', color: active ? '#fff' : '#ea580c',
+        transition: 'all 0.2s',
+    }),
+    folderCard: {
+        background: '#fff', borderRadius: '14px', border: '1px solid #f1f5f9',
+        padding: '1.5rem', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        cursor: 'pointer', transition: 'all 0.2s',
+    },
+    deleteBtn: {
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: '28px', height: '28px', background: 'transparent', color: '#ef4444',
+        border: 'none', borderRadius: '50%', cursor: 'pointer', fontSize: '0.8rem',
+    },
+    noticeCard: {
+        background: '#fff', borderRadius: '14px', border: '1px solid #f1f5f9',
+        padding: '1.25rem 1.5rem', marginBottom: '1.25rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    },
+    publishBtn: {
+        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+        padding: '0.45rem 1.2rem', background: '#ea580c', color: '#fff', border: 'none',
+        borderRadius: '8px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer',
+    },
+    declineBtn: {
+        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+        padding: '0.45rem 1.2rem', background: '#fff', color: '#1e293b',
+        border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '500',
+        fontSize: '0.85rem', cursor: 'pointer',
+    },
+    profileCard: {
+        background: '#f8fafc', padding: '1.5rem', borderRadius: '14px', border: '1px solid #e2e8f0',
+    },
+    profileLabel: { display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: '500' },
+    profileValue: { fontWeight: '700', color: '#1e293b', fontSize: '1rem' },
+    feedbackToggle: {
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+        padding: '0.6rem 1.5rem', background: '#fff', border: '1px solid #cbd5e1',
+        borderRadius: '10px', fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer',
+        margin: '0 auto',
+    },
+};
+
+// Helper for file icons
+const getFileIcon = (filename) => {
+    if (!filename) return <FaFileAlt size={36} />;
+    const ext = filename.split('.').pop().toLowerCase();
+    if (['pdf'].includes(ext)) return <FaFilePdf size={36} color="#ef4444" />;
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) return <FaFileImage size={36} color="#3b82f6" />;
+    if (['doc', 'docx'].includes(ext)) return <FaFileWord size={36} color="#2563eb" />;
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return <FaFileExcel size={36} color="#16a34a" />;
+    if (['ppt', 'pptx'].includes(ext)) return <FaFilePowerpoint size={36} color="#d97706" />;
+    if (['zip', 'rar', '7z', 'tar'].includes(ext)) return <FaFileArchive size={36} color="#9333ea" />;
+    if (['mp4', 'mkv', 'avi', 'mov'].includes(ext)) return <FaFileVideo size={36} color="#be123c" />;
+    if (['mp3', 'wav', 'ogg'].includes(ext)) return <FaFileAudio size={36} color="#db2777" />;
+    if (['js', 'jsx', 'ts', 'tsx', 'html', 'css', 'json', 'py', 'java', 'c', 'cpp'].includes(ext)) return <FaFileCode size={36} color="#4b5563" />;
+    return <FaFileAlt size={36} color="#64748b" />;
+};
 
 const TeacherDashboard = () => {
     const { user, loadUser, loading: authLoading } = useContext(AuthContext);
@@ -20,23 +121,30 @@ const TeacherDashboard = () => {
     const [msg, setMsg] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Profile Edit State
+    // Profile
     const [editMode, setEditMode] = useState(false);
     const [editData, setEditData] = useState({ full_name: '', email: '', department: '' });
 
-    // Modal State
+    // Modal
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDanger: false });
     const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
+
+    // Feedback
+    const [feedbackList, setFeedbackList] = useState([]);
+
+
+    // Notices sub-view
+    const [showNoticeForm, setShowNoticeForm] = useState(false);
+
+    // My Uploads - open batch folder (null = show folder list)
+    const [openBatchFolder, setOpenBatchFolder] = useState(null);
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const tab = params.get('tab');
         if (tab) setActiveTab(tab);
-        else navigate('?tab=new-upload', { replace: true });
+        else navigate('?tab=announcement', { replace: true });
     }, [location.search, navigate]);
-
-    // Feedback State
-    const [feedbackList, setFeedbackList] = useState([]);
 
     const fetchBatches = async () => {
         try {
@@ -47,17 +155,13 @@ const TeacherDashboard = () => {
     };
 
     const fetchMyDocs = async () => {
-        try {
-            const res = await axios.get('/documents/my-uploads');
-            setMyDocs(res.data);
-        } catch (err) { console.error(err); }
+        try { const res = await axios.get('/documents/my-uploads'); setMyDocs(res.data); }
+        catch (err) { console.error(err); }
     };
 
     const fetchNotices = async () => {
-        try {
-            const res = await axios.get('/announcements');
-            setNotices(res.data.filter(n => n.type === 'NOTICE'));
-        } catch (err) { console.error(err); }
+        try { const res = await axios.get('/announcements'); setNotices(res.data.filter(n => n.type === 'NOTICE')); }
+        catch (err) { console.error(err); }
     };
 
     const fetchRoutines = async () => {
@@ -65,13 +169,11 @@ const TeacherDashboard = () => {
             const res = await axios.get('/announcements');
             const allRoutines = res.data.filter(n => n.type === 'ROUTINE');
             setRoutines(allRoutines);
-
-            // Fetch feedback for my routines
-            const myRoutines = allRoutines.filter(r => r.author?._id === user.id);
-            if (myRoutines.length > 0) {
-                // Fetch feedback for each
+            // Fetch feedback for routines pending feedback
+            const pendingFeedbackRoutines = allRoutines.filter(r => r.status === 'PENDING_FEEDBACK');
+            if (pendingFeedbackRoutines.length > 0) {
                 let allFeedback = [];
-                for (let r of myRoutines) {
+                for (let r of pendingFeedbackRoutines) {
                     try {
                         const fbRes = await axios.get(`/feedback?target_announcement_id=${r._id}`);
                         allFeedback = [...allFeedback, ...fbRes.data];
@@ -86,420 +188,421 @@ const TeacherDashboard = () => {
         if (activeTab === 'new-upload' || activeTab === 'announcement') fetchBatches();
         if (activeTab === 'my-uploads') fetchMyDocs();
         if (activeTab === 'notices') fetchNotices();
-        if (activeTab === 'routine') {
-            fetchRoutines();
-        }
-        if (activeTab === 'peer-review') fetchRoutines(); // To see others' routines
+        if (activeTab === 'routine') fetchRoutines();
     }, [activeTab]);
 
     const handleUpload = async (e) => {
         e.preventDefault();
         if (!file) return;
-
         const formData = new FormData();
         formData.append('file', file);
         formData.append('target_batch_id', selectedBatch);
-
-        setLoading(true);
-        setMsg('');
+        setLoading(true); setMsg('');
         try {
-            await axios.post(`/documents/upload?target_batch_id=${selectedBatch}`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            setMsg('File Uploaded Successfully');
-            setFile(null);
-        } catch (err) {
-            setMsg('Upload Failed');
-        } finally {
-            setLoading(false);
-        }
+            await axios.post(`/documents/upload?target_batch_id=${selectedBatch}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            setMsg('File Uploaded Successfully'); setFile(null);
+        } catch (err) { setMsg('Upload Failed'); }
+        finally { setLoading(false); }
     };
 
-    const handleRoutineUpload = async (e) => {
-        e.preventDefault();
-        if (!file) return;
+    const handleRoutineUpload = async (status) => {
+        if (!file) { alert("Please select a file."); return; }
+        const msg = document.getElementById('routineMsg').value;
+        if (!msg) { alert("Please enter routine details."); return; }
 
         const formData = new FormData();
         formData.append('file', file);
         formData.append('title', 'Routine');
-        formData.append('content', e.target.msg.value);
+        formData.append('content', msg);
         formData.append('type', 'ROUTINE');
-        formData.append('status', window.uploadStatus || 'PENDING_FEEDBACK');
+        formData.append('status', status);
 
         setLoading(true);
         try {
-            await axios.post('/announcements', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            alert('Routine Sent for Approval');
+            await axios.post('/announcements', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            alert('Routine submitted successfully!');
             setFile(null);
-            e.target.reset();
+            document.getElementById('routineMsg').value = '';
+            document.getElementById('routineFile').value = '';
+            fetchRoutines();
+        } catch (err) { alert('Failed to send routine'); }
+        finally { setLoading(false); }
+    };
+
+    const sendToChairman = async (id) => {
+        if (!window.confirm('Are you sure you want to send this routine to the Chairman for final approval?')) return;
+        try {
+            await axios.put(`/announcements/${id}/status`, { status: 'PENDING_APPROVAL' });
+            alert('Routine sent to Chairman for approval!');
             fetchRoutines();
         } catch (err) {
-            alert('Failed to send routine');
-        } finally {
-            setLoading(false);
+            console.error(err);
+            alert('Failed to send for approval');
         }
+    };
+
+    const handleClassUpdate = async (e) => {
+        e.preventDefault();
+        setLoading(true); setMsg('');
+        try {
+            const message = e.target.message.value;
+            const title = e.target.title_display?.value || 'Announcement';
+            await axios.post('/announcements', { title, content: message, type: 'ANNOUNCEMENT', target_batch: selectedBatch });
+            setMsg('Announcement Sent Successfully'); e.target.reset();
+        } catch (err) { setMsg('Failed to send'); }
+        finally { setLoading(false); }
+    };
+
+    const handleNoticeSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true); setMsg('');
+        try {
+            const formData = new FormData();
+            formData.append('title', e.target.noticeTitle.value);
+            formData.append('content', e.target.noticeContent.value);
+            formData.append('type', 'NOTICE');
+            formData.append('target_audience', e.target.audience.value);
+            if (e.target.noticeFile.files[0]) formData.append('file', e.target.noticeFile.files[0]);
+            await axios.post('/announcements', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            alert('Notice sent for approval!'); e.target.reset(); setShowNoticeForm(false); fetchNotices();
+        } catch (err) { alert('Failed to submit notice'); }
+        finally { setLoading(false); }
     };
 
     const updateProfile = async (e) => {
         e.preventDefault();
         try {
             const res = await axios.put('/auth/profile', editData);
-            if (res.data.success) {
-                alert('Profile Updated.');
-                setEditMode(false);
-                await loadUser();
-            }
-        } catch (err) {
-            alert('Update failed');
-        }
+            if (res.data.success) { alert('Profile Updated.'); setEditMode(false); await loadUser(); }
+        } catch (err) { alert('Update failed'); }
     };
 
-    const handleClassUpdate = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setMsg('');
-        try {
-            const type = e.target.type.value;
-            const message = e.target.message.value;
-            const title = `[${type}] Class Update`;
 
-            await axios.post('/announcements', {
-                title,
-                content: message,
-                type: 'ANNOUNCEMENT',
-                target_batch: selectedBatch
-            });
-            setMsg('Class Update Sent Successfully');
-            e.target.reset();
-        } catch (err) {
-            setMsg('Failed to send update');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const submitPeerFeedback = async (routineId, feedbackContent) => {
-        if (!feedbackContent) return;
-        try {
-            await axios.post('/feedback', {
-                message_content: feedbackContent,
-                target_announcement: routineId, // Fixed: backend expects target_announcement or target_announcement_id? Check model.
-                // feedbackRoutes says: const { ... target_announcement } = req.body;
-                is_anonymous: false
-            });
-            alert('Feedback sent!');
-            fetchRoutines();
-        } catch (err) {
-            alert('Failed to send feedback');
-        }
-    };
-
-    const deleteFeedback = async (id) => {
-        if (!window.confirm('Delete this feedback?')) return;
-        try {
-            await axios.delete(`/feedback/${id}`);
-            fetchRoutines();
-        } catch (err) {
-            alert('Failed to delete feedback');
-        }
-    };
-
-    const deleteRoutine = async (id) => {
-        if (!window.confirm('Delete this routine?')) return;
-        try {
-            await axios.delete(`/announcements/${id}`);
-            fetchRoutines();
-        } catch (err) {
-            alert('Failed to delete routine');
-        }
-    };
-
+    const deleteFeedback = async (id) => { if (!window.confirm('Delete this feedback?')) return; try { await axios.delete(`/feedback/${id}`); fetchRoutines(); } catch (err) { alert('Failed'); } };
+    const deleteRoutine = async (id) => { if (!window.confirm('Delete this routine?')) return; try { await axios.delete(`/announcements/${id}`); fetchRoutines(); } catch (err) { alert('Failed'); } };
     const deleteDoc = (id) => {
         setConfirmModal({
             isOpen: true, title: 'Delete File?', message: 'Permanently delete this file?', isDanger: true,
-            onConfirm: async () => {
-                try { await axios.delete(`/documents/${id}`); fetchMyDocs(); }
-                catch (err) { alert('Delete failed'); } finally { closeConfirmModal(); }
-            }
+            onConfirm: async () => { try { await axios.delete(`/documents/${id}`); fetchMyDocs(); } catch (err) { alert('Delete failed'); } finally { closeConfirmModal(); } }
         });
     };
 
     if (authLoading) return <div style={{ display: 'flex', justifyContent: 'center', height: '100vh', alignItems: 'center' }}><Loader /></div>;
     if (!user) return null;
 
+    // Group uploads by batch for My Uploads tab
+    const groupedDocs = myDocs.reduce((acc, doc) => {
+        const batchName = doc.target_batch?.batch_name || 'General';
+        if (!acc[batchName]) acc[batchName] = [];
+        acc[batchName].push(doc);
+        return acc;
+    }, {});
+    const batchNames = Object.keys(groupedDocs);
+
+    // Routine helpers
+    const pendingRoutines = routines.filter(r => (r.status === 'PENDING_APPROVAL' || r.status === 'PENDING_FEEDBACK') && r.author?._id === user.id);
+    const publishedRoutines = routines.filter(r => r.status === 'APPROVED');
+
+
     return (
         <Layout>
-            <div className="container" style={{ maxWidth: '1200px', padding: '2rem' }}>
+            <div style={s.wrapper}>
                 <ConfirmModal isOpen={confirmModal.isOpen} onClose={closeConfirmModal} onConfirm={confirmModal.onConfirm} title={confirmModal.title} message={confirmModal.message} isDanger={confirmModal.isDanger} />
 
-                {/* Profile Tab */}
-                {activeTab === 'profile' && (
-                    <div className="fade-in">
-                        <div style={{ background: 'white', padding: '3rem', borderRadius: '16px', border: '1px solid #fee2e2', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                                <div>
-                                    <h2 style={{ fontSize: '2rem', color: '#f97316', marginBottom: '0.5rem' }}>Teacher Profile</h2>
-                                    <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Manage your account details.</p>
-                                </div>
-                                {!editMode && (
-                                    <button onClick={() => { setEditData({ full_name: user.name, email: user.email, department: user.department || '' }); setEditMode(true); }} style={{ padding: '0.8rem 1.5rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#1e293b' }}>
-                                        Edit Profile
-                                    </button>
-                                )}
+                {/* ═══════ ANNOUNCEMENTS TAB ═══════ */}
+                {activeTab === 'announcement' && (
+                    <div style={s.outerCard}>
+                        <h2 style={s.sectionTitle}>Target Batch</h2>
+                        <form onSubmit={handleClassUpdate}>
+                            <div style={{ marginBottom: '1.25rem' }}>
+                                <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} style={s.input}>
+                                    {batches.map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
+                                </select>
                             </div>
-                            {editMode ? (
-                                <form onSubmit={updateProfile} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                                    <div><label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Full Name</label><input type="text" value={editData.full_name} onChange={e => setEditData({ ...editData, full_name: e.target.value })} style={{ width: '100%', padding: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }} /></div>
-                                    <div><label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Email Address</label><input type="email" value={editData.email} onChange={e => setEditData({ ...editData, email: e.target.value })} style={{ width: '100%', padding: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }} /></div>
-                                    <div><label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Department</label><input type="text" value={editData.department} onChange={e => setEditData({ ...editData, department: e.target.value })} style={{ width: '100%', padding: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }} /></div>
-                                    <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '1rem' }}><button type="submit" className="btn-primary">Save Changes</button><button type="button" onClick={() => setEditMode(false)} className="btn-secondary">Cancel</button></div>
-                                </form>
-                            ) : (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                                    <div style={{ background: '#f1f5f9', padding: '2rem', borderRadius: '12px' }}><label style={{ display: 'block', fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem' }}>Full Name</label><div style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b' }}>{user.name}</div></div>
-                                    <div style={{ background: '#f1f5f9', padding: '2rem', borderRadius: '12px' }}><label style={{ display: 'block', fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem' }}>Email Address</label><div style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b' }}>{user.email}</div></div>
-                                    <div style={{ background: '#f1f5f9', padding: '2rem', borderRadius: '12px' }}><label style={{ display: 'block', fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem' }}>Role</label><div style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b' }}>{user.role}</div></div>
-                                    <div style={{ background: '#f1f5f9', padding: '2rem', borderRadius: '12px' }}><label style={{ display: 'block', fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem' }}>Department</label><div style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b' }}>{user.department || 'ICE'}</div></div>
+                            <div style={{ marginBottom: '1.25rem' }}>
+                                <input name="title_display" placeholder="Title/Subject" style={s.input} />
+                            </div>
+                            <div style={{ marginBottom: '1.25rem' }}>
+                                <textarea name="message" placeholder="Message..." rows="4" style={s.textarea} required></textarea>
+                            </div>
+                            {msg && <div style={{ textAlign: 'center', padding: '0.75rem', background: msg.includes('Success') ? '#dcfce7' : '#fee2e2', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>{msg}</div>}
+                            <button type="submit" style={s.submitBtn} disabled={loading}>Send to Announcement</button>
+                        </form>
+                    </div>
+                )}
+
+                {/* ═══════ NEW UPLOAD TAB ═══════ */}
+                {activeTab === 'new-upload' && (
+                    <div style={s.outerCard}>
+                        <h2 style={s.sectionTitle}>Target Batch</h2>
+                        {msg && <div style={{ textAlign: 'center', padding: '0.75rem', background: msg.includes('Success') ? '#dcfce7' : '#fee2e2', color: msg.includes('Success') ? '#166534' : '#991b1b', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>{msg}</div>}
+                        <form onSubmit={handleUpload}>
+                            <div style={{ marginBottom: '1.25rem' }}>
+                                <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} style={s.input}>
+                                    {batches.map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
+                                </select>
+                            </div>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={s.label}>Select Document</label>
+                                <div onClick={() => document.getElementById('resFile').click()} style={s.uploadZone}>
+                                    <div style={{ color: '#ea580c', marginBottom: '0.75rem' }}><FaCloudUploadAlt size={48} /></div>
+                                    {file ? <div style={{ fontWeight: '600', color: '#1e293b' }}>{file.name}</div> : <div style={{ color: '#1e293b', fontWeight: '600' }}>Click to browse file</div>}
                                 </div>
-                            )}
-                        </div>
+                                <input id="resFile" type="file" onChange={e => setFile(e.target.files[0])} style={{ display: 'none' }} />
+                            </div>
+                            <button type="submit" style={s.submitBtn} disabled={loading}>Upload Resource</button>
+                        </form>
                     </div>
                 )}
 
-                {/* Notices Tab */}
-                {activeTab === 'notices' && (
-                    <div className="fade-in">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}><h2 style={{ fontSize: '2rem', color: '#1e293b' }}>Latest Notices</h2></div>
-                        <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <thead><tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}><th style={{ padding: '1.5rem', textAlign: 'left', fontSize: '0.85rem', color: '#64748b' }}>NO</th><th style={{ padding: '1.5rem', textAlign: 'left', fontSize: '0.85rem', color: '#64748b' }}>Title</th><th style={{ padding: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>Files</th><th style={{ padding: '1.5rem', textAlign: 'right', fontSize: '0.85rem', color: '#64748b' }}>Date</th><th style={{ padding: '1.5rem', textAlign: 'right', fontSize: '0.85rem', color: '#64748b' }}>Action</th></tr></thead>
-                                <tbody>
-                                    {notices.map((notice, index) => (
-                                        <tr key={notice._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                            <td style={{ padding: '1.5rem', color: '#64748b' }}>{index + 1}</td>
-                                            <td style={{ padding: '1.5rem', fontWeight: '500', color: '#1e293b' }}>{notice.title}</td>
-                                            <td style={{ padding: '1.5rem', textAlign: 'center' }}>{notice.file_url ? <FaFilePdf color="#ef4444" size={20} /> : '-'}</td>
-                                            <td style={{ padding: '1.5rem', textAlign: 'right', color: '#64748b' }}>{new Date(notice.created_at).toLocaleDateString()}</td>
-                                            <td style={{ padding: '1.5rem', textAlign: 'right' }}>{notice.file_url && <a href={notice.file_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontWeight: '500', textDecoration: 'none' }}>View</a>}</td>
-                                        </tr>
+                {/* ═══════ MY UPLOADS TAB ═══════ */}
+                {activeTab === 'my-uploads' && (
+                    <div style={s.outerCard}>
+                        {!openBatchFolder ? (
+                            /* ── Batch Folder List ── */
+                            batchNames.length === 0 ? (
+                                <p style={{ color: '#94a3b8', textAlign: 'center' }}>No uploads found.</p>
+                            ) : (
+                                <div className="teacher-folder-grid">
+                                    {batchNames.map(name => (
+                                        <div key={name} onClick={() => setOpenBatchFolder(name)} style={{ ...s.folderCard, cursor: 'pointer' }}>
+                                            <div style={{ color: '#f59e0b', marginBottom: '0.5rem' }}><FaFolder size={40} /></div>
+                                            <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#ea580c' }}>{name}</div>
+                                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>{groupedDocs[name].length} file(s)</div>
+                                        </div>
                                     ))}
-                                    {notices.length === 0 && <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No notices found.</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
+                                </div>
+                            )
+                        ) : (
+                            /* ── Documents inside a batch folder ── */
+                            <>
+                                <button onClick={() => setOpenBatchFolder(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', color: '#ea580c', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', marginBottom: '1.25rem', padding: 0 }}>← Back</button>
+                                <h3 style={{ fontWeight: '700', color: '#1e293b', fontSize: '1.1rem', marginBottom: '1.25rem' }}>{openBatchFolder}</h3>
+                                {(groupedDocs[openBatchFolder] || []).length === 0 ? (
+                                    <p style={{ color: '#94a3b8', textAlign: 'center', fontStyle: 'italic' }}>No files in this batch.</p>
+                                ) : (
+                                    <div className="teacher-folder-grid">
+                                        {groupedDocs[openBatchFolder].map(doc => (
+                                            <div key={doc._id} style={{ ...s.folderCard, position: 'relative' }}>
+                                                <button onClick={() => deleteDoc(doc._id)} style={{ ...s.deleteBtn, position: 'absolute', top: '0.4rem', right: '0.4rem' }}><FaTrash size={10} /></button>
+                                                <a href={doc.file_path} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                    <div style={{ marginBottom: '0.5rem' }}>{getFileIcon(doc.original_filename)}</div>
+                                                    <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#ea580c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.original_filename}</div>
+                                                </a>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 )}
 
-                {/* My Routines Tab */}
+                {/* ═══════ NOTICES TAB ═══════ */}
+                {activeTab === 'notices' && (
+                    <>
+                        {!showNoticeForm ? (
+                            <>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ ...s.sectionTitle, marginBottom: 0 }}>Latest Notices</h2>
+                                    <button onClick={() => setShowNoticeForm(true)} style={s.publishBtn}>Create Notice</button>
+                                </div>
+                                <div style={{ ...s.outerCard, padding: '0', overflow: 'hidden' }}>
+                                    <div style={{ overflowX: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+                                            <thead>
+                                                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                    <th style={{ padding: '1.2rem 1.5rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>NO</th>
+                                                    <th style={{ padding: '1.2rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>TITLE</th>
+                                                    <th style={{ padding: '1.2rem 1rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>FILES</th>
+                                                    <th style={{ padding: '1.2rem 1rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>DATE</th>
+                                                    <th style={{ padding: '1.2rem 1.5rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {notices.filter(n => n.status === 'APPROVED').map((notice, index) => (
+                                                    <tr key={notice._id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                                        <td style={{ padding: '1rem 1.5rem', color: '#64748b', fontSize: '0.9rem' }}>{index + 1}</td>
+                                                        <td style={{ padding: '1rem', fontWeight: '500', color: '#1e293b', fontSize: '0.9rem' }}>{notice.title}</td>
+                                                        <td style={{ padding: '1rem', textAlign: 'center' }}>{notice.file_url ? <FaFilePdf color="#ef4444" size={18} /> : '—'}</td>
+                                                        <td style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>{new Date(notice.created_at).toLocaleDateString()}</td>
+                                                        <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>{notice.file_url && <a href={notice.file_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontWeight: '500', textDecoration: 'none', fontSize: '0.85rem' }}>View</a>}</td>
+                                                    </tr>
+                                                ))}
+                                                {notices.filter(n => n.status === 'APPROVED').length === 0 && <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No notices found.</td></tr>}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div style={s.outerCard}>
+                                    <h2 style={s.sectionTitle}>📣 Post New Notice</h2>
+                                    <form onSubmit={handleNoticeSubmit}>
+                                        <div style={{ marginBottom: '1.25rem' }}><input name="noticeTitle" placeholder="Notice Title (e.g. Holi Holiday)" style={s.input} required /></div>
+                                        <div style={{ marginBottom: '1.25rem' }}><textarea name="noticeContent" placeholder="Notice Details" rows="4" style={s.textarea} required></textarea></div>
+                                        <div style={{ marginBottom: '1.25rem' }}>
+                                            <label style={s.label}>Attach Document (PDF/Image - Optional)</label>
+                                            <input name="noticeFile" type="file" accept=".pdf,.jpg,.png,.jpeg" style={{ fontSize: '0.9rem' }} />
+                                        </div>
+                                        <div style={{ marginBottom: '1.25rem' }}>
+                                            <label style={s.label}>Select Audience</label>
+                                            <select name="audience" style={s.input}>
+                                                <option value="Everyone">Teacher/Student/Everyone</option>
+                                                <option value="Teacher">Teacher Only</option>
+                                                <option value="Student">Student Only</option>
+                                            </select>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                            <button type="submit" style={{ ...s.submitBtn, margin: 0 }} disabled={loading}>Send for Approval</button>
+                                            <button type="button" onClick={() => setShowNoticeForm(false)} style={{ ...s.declineBtn, padding: '0.85rem 2rem' }}>Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div style={s.outerCard}>
+                                    <h2 style={s.sectionTitle}>⏳ Pending Notice</h2>
+                                    {notices.filter(n => (n.status === 'PENDING' || n.status === 'PENDING_APPROVAL') && n.author?._id === user.id).length === 0 ? (
+                                        <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No pending notices.</p>
+                                    ) : notices.filter(n => (n.status === 'PENDING' || n.status === 'PENDING_APPROVAL') && n.author?._id === user.id).map(item => (
+                                        <div key={item._id} style={s.noticeCard}>
+                                            <div className="chairman-card-row">
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.25rem' }}>{item.title}</h4>
+                                                    <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0 0 0.4rem', lineHeight: '1.5' }}>{item.content}</p>
+                                                    {item.file_url && <a href={item.file_url} target="_blank" rel="noopener noreferrer" style={s.attachBtn}><FaPaperclip /> View Attached Document</a>}
+                                                </div>
+                                                <button onClick={() => { if (window.confirm('Delete this pending notice?')) { axios.delete(`/announcements/${item._id}`).then(() => fetchNotices()); } }} style={s.deleteBtn}><FaTrash /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+
+                {/* ═══════ ROUTINE TAB ═══════ */}
                 {activeTab === 'routine' && (
-                    <div className="fade-in">
-                        <div style={{ background: 'white', padding: '3rem', borderRadius: '16px', border: '1px solid #fee2e2', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginBottom: '2rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', color: '#1e293b', marginBottom: '2rem' }}>Upload Routine</h2>
-                            <form onSubmit={handleRoutineUpload}>
+                    <>
+                        {/* Upload Routine */}
+                        <div style={s.outerCard}>
+                            <h2 style={s.sectionTitle}>Routine</h2>
+                            <form onSubmit={(e) => e.preventDefault()}>
+                                <div style={{ marginBottom: '1.25rem' }}>
+                                    <textarea name="msg" id="routineMsg" placeholder="Routine Details / Message..." rows="3" style={s.textarea} required></textarea>
+                                </div>
                                 <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1e293b' }}>Select Document</label>
-                                    <div onClick={() => document.getElementById('routineFile').click()} style={{ border: '2px dashed #f97316', background: '#fff7ed', borderRadius: '12px', padding: '3rem', textAlign: 'center', cursor: 'pointer' }}>
-                                        <div style={{ color: '#f97316', marginBottom: '1rem' }}><FaCloudUploadAlt size={48} /></div>
-                                        {file ? <div style={{ fontWeight: '600' }}>{file.name}</div> : <div style={{ color: '#1e293b', fontWeight: '600' }}>Click to browse file</div>}
+                                    <label style={s.label}>Select Document</label>
+                                    <div onClick={() => document.getElementById('routineFile').click()} style={s.uploadZone}>
+                                        <div style={{ color: '#ea580c', marginBottom: '0.75rem' }}><FaCloudUploadAlt size={48} /></div>
+                                        {file ? <div style={{ fontWeight: '600', color: '#1e293b' }}>{file.name}</div> : <div style={{ color: '#1e293b', fontWeight: '600' }}>Click to browse file</div>}
                                     </div>
                                     <input id="routineFile" type="file" onChange={e => setFile(e.target.files[0])} style={{ display: 'none' }} accept=".pdf,.doc,.docx,.jpg,.png" />
                                 </div>
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <textarea name="msg" placeholder="Message..." rows="4" style={{ width: '100%', padding: '1rem', background: '#f1f5f9', border: 'none', borderRadius: '12px', resize: 'none' }}></textarea>
-                                </div>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <button type="submit" onClick={() => { window.uploadStatus = 'PENDING_FEEDBACK'; }} className="btn-secondary" style={{ flex: 1, borderRadius: '8px' }} disabled={loading}>
-                                        Request Peer Feedback
-                                    </button>
-                                    <button type="submit" onClick={() => { window.uploadStatus = 'PENDING_APPROVAL'; }} className="btn-primary" style={{ flex: 1, borderRadius: '8px' }} disabled={loading}>
-                                        Send for Approval
-                                    </button>
+                                <div className="teacher-routine-btns">
+                                    <button type="button" onClick={() => handleRoutineUpload('PENDING_FEEDBACK')} style={s.declineBtn} disabled={loading}>Request Peer Feedback</button>
+                                    <button type="button" onClick={() => handleRoutineUpload('PENDING_APPROVAL')} style={s.publishBtn} disabled={loading}>Send for Approval</button>
                                 </div>
                             </form>
                         </div>
-                        {/* My Uploaded Routines List */}
-                        <div style={{ marginTop: '2rem' }}>
-                            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>My Routine History</h3>
-                            <div style={{ display: 'grid', gap: '1rem' }}>
-                                {routines.filter(r => r.author?._id === user.id).map(r => (
-                                    <div key={r._id} style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'flex-start' }}>
-                                            <div style={{ fontWeight: 'bold', color: '#334155' }}>{r.title}</div>
-                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.6rem', borderRadius: '12px', background: r.status === 'APPROVED' ? '#dcfce7' : r.status === 'PENDING_FEEDBACK' ? '#fef9c3' : '#e0e7ff', color: r.status === 'APPROVED' ? '#166534' : r.status === 'PENDING_FEEDBACK' ? '#854d0e' : '#3730a3' }}>
-                                                    {r.status.replace('_', ' ')}
-                                                </span>
-                                                <button onClick={() => deleteRoutine(r._id)} style={{ color: '#ef4444', background: '#fee2e2', padding: '0.4rem', borderRadius: '50%', cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete Routine">
-                                                    <FaTrash size={12} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <p style={{ color: '#64748b' }}>{r.content}</p>
-                                        {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}><FaFilePdf /> View Routine</a>}
-                                        {r.feedback && (
-                                            <div style={{ marginTop: '1rem', padding: '1rem', background: '#fef2f2', borderRadius: '8px', borderLeft: '3px solid #ef4444' }}>
-                                                <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#991b1b' }}>Admin Feedback:</div>
-                                                <div style={{ fontSize: '0.9rem', color: '#7f1d1d' }}>{r.feedback}</div>
-                                            </div>
-                                        )}
-                                        {/* Peer Feedback Section */}
-                                        {feedbackList.filter(f => f.target_announcement === r._id).length > 0 && (
-                                            <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: '8px', borderLeft: '3px solid #0ea5e9' }}>
-                                                <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#0369a1', marginBottom: '0.5rem' }}>Peer Feedback:</div>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                                    {feedbackList.filter(f => f.target_announcement === r._id).map(f => (
-                                                        <div key={f._id} style={{ fontSize: '0.9rem', color: '#334155', borderBottom: '1px solid #e0f2fe', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                            <div>
-                                                                <span style={{ fontWeight: '600', marginRight: '0.5rem' }}>{f.from_user?.full_name || 'Anonymous'}:</span>
-                                                                {f.message_content}
-                                                            </div>
-                                                            <button onClick={() => deleteFeedback(f._id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.2rem' }} title="Delete Feedback">
-                                                                <FaTrash size={12} />
-                                                            </button>
-                                                        </div>
-                                                    ))}
+
+
+
+                        {/* Pending Routine / Routine for Approval */}
+                        {pendingRoutines.length > 0 && (
+                            <div style={s.outerCard}>
+                                <h2 style={s.sectionTitle}>⏳ Routine for Approval</h2>
+                                {pendingRoutines.map(r => (
+                                    <div key={r._id} style={s.noticeCard}>
+                                        <div className="chairman-card-row">
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <h4 style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.3rem' }}>
+                                                    {r.title}
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 'normal', marginLeft: '0.5rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: r.status === 'PENDING_FEEDBACK' ? '#fef3c7' : '#fed7aa', color: r.status === 'PENDING_FEEDBACK' ? '#b45309' : '#c2410c' }}>
+                                                        {r.status.replace('_', ' ')}
+                                                    </span>
+                                                </h4>
+                                                {r.content && <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 0.5rem' }}>{r.content}</p>}
+                                                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                    {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={s.attachBtn}><FaPaperclip /> View Attached Document</a>}
+                                                    {r.status === 'PENDING_FEEDBACK' && (
+                                                        <button onClick={() => sendToChairman(r._id)} style={{ ...s.publishBtn, padding: '0.4rem 1rem', fontSize: '0.8rem' }}>
+                                                            Send to Chairman
+                                                        </button>
+                                                    )}
                                                 </div>
+                                                {/* Show feedback on this routine */}
+                                                {feedbackList.filter(f => f.target_announcement === r._id).length > 0 && (
+                                                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '8px', borderLeft: '3px solid #0ea5e9' }}>
+                                                        <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#0369a1', marginBottom: '0.4rem' }}>Peer Feedback:</div>
+                                                        {feedbackList.filter(f => f.target_announcement === r._id).map(f => (
+                                                            <div key={f._id} style={{ fontSize: '0.85rem', color: '#334155', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.3rem' }}>
+                                                                <div><strong>{f.from_user?.full_name || 'Anonymous'}:</strong> {f.message_content}</div>
+                                                                <button onClick={() => deleteFeedback(f._id)} style={s.deleteBtn}><FaTrash size={11} /></button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                ))}
-                                {routines.filter(r => r.author?._id === user.id).length === 0 && (
-                                    <p style={{ color: '#94a3b8', textAlign: 'center' }}>No routines uploaded yet.</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Approved Routines from Others */}
-                        <div style={{ marginTop: '3rem' }}>
-                            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>Department Routines (Approved)</h3>
-                            <div style={{ display: 'grid', gap: '1rem' }}>
-                                {routines.filter(r => r.status === 'APPROVED' && r.author?._id !== user.id).map(r => (
-                                    <div key={r._id} style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'flex-start' }}>
-                                            <div style={{ fontWeight: 'bold', color: '#334155' }}>{r.title} <span style={{ fontWeight: 'normal', color: '#64748b' }}>- by {r.author?.full_name}</span></div>
-                                            <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.6rem', borderRadius: '12px', background: '#dcfce7', color: '#166534' }}>
-                                                APPROVED
-                                            </span>
+                                            <button onClick={() => deleteRoutine(r._id)} style={s.deleteBtn}><FaTrash /></button>
                                         </div>
-                                        <p style={{ color: '#64748b' }}>{r.content}</p>
-                                        {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}><FaFilePdf /> View Routine</a>}
                                     </div>
                                 ))}
-                                {routines.filter(r => r.status === 'APPROVED' && r.author?._id !== user.id).length === 0 && (
-                                    <p style={{ color: '#94a3b8', textAlign: 'center' }}>No approved routines from others.</p>
-                                )}
                             </div>
-                        </div>
-                    </div>
-                )}
+                        )}
 
-                {/* Peer Review Tab */}
-                {activeTab === 'peer-review' && (
-                    <div className="fade-in">
-                        <h2 style={{ fontSize: '1.5rem', color: '#1e293b', marginBottom: '2rem' }}>Peer Review (Pending Feedback)</h2>
-                        <div style={{ display: 'grid', gap: '1.5rem' }}>
-                            {routines.filter(r => r.status === 'PENDING_FEEDBACK' && r.author?._id !== user.id).map(r => (
-                                <div key={r._id} style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ fontWeight: 'bold' }}>{r.title} - <span style={{ fontWeight: 'normal', color: '#64748b' }}>by {r.author?.full_name}</span></div>
-                                    <p style={{ margin: '0.5rem 0', color: '#475569' }}>{r.content}</p>
-                                    {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><FaFilePdf /> View Routine</a>}
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <input type="text" id={`feedback-${r._id}`} placeholder="Write feedback..." style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
-                                        <button onClick={() => {
-                                            const val = document.getElementById(`feedback-${r._id}`).value;
-                                            submitPeerFeedback(r._id, val);
-                                        }} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Send</button>
-                                    </div>
+                        {/* Published / Approved Routines */}
+                        <div style={s.outerCard}>
+                            <h2 style={s.sectionTitle}>Published Routine</h2>
+                            {publishedRoutines.length === 0 ? (
+                                <p style={{ color: '#94a3b8', textAlign: 'center', fontStyle: 'italic' }}>No published routines yet.</p>
+                            ) : publishedRoutines.map(r => (
+                                <div key={r._id} style={s.noticeCard}>
+                                    <h4 style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.3rem' }}>
+                                        {r.title} {r.author?._id !== user.id && <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: '0.85rem' }}>— by {r.author?.full_name}</span>}
+                                    </h4>
+                                    {r.content && <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 0.5rem' }}>{r.content}</p>}
+                                    {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={s.attachBtn}><FaPaperclip /> View Attached Document</a>}
                                 </div>
                             ))}
-                            {routines.filter(r => r.status === 'PENDING_FEEDBACK' && r.author?._id !== user.id).length === 0 && (
-                                <p style={{ color: '#94a3b8', textAlign: 'center' }}>No routines pending peer review.</p>
-                            )}
                         </div>
-                    </div>
+                    </>
                 )}
 
-                {/* Class Updates Tab */}
-                {activeTab === 'class-updates' && (
-                    <div className="fade-in" style={{ display: 'flex', justifyContent: 'center' }}>
-                        <div style={{ maxWidth: '600px', width: '100%', background: 'white', padding: '3rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                            <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#1e293b' }}>Send Class Update</h2>
-                            {msg && <div style={{ textAlign: 'center', padding: '1rem', background: msg.includes('Success') ? '#dcfce7' : '#fee2e2', borderRadius: '8px', marginBottom: '1rem' }}>{msg}</div>}
-                            <form onSubmit={handleClassUpdate}>
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>Select Batch</label>
-                                    <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                                        {batches.map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
-                                    </select>
-                                </div>
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>Update Type</label>
-                                    <select name="type" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                                        <option value="CANCEL">Class Cancellation</option>
-                                        <option value="RESCHEDULE">Reschedule</option>
-                                        <option value="ALARM">Alarm/Reminder</option>
-                                    </select>
-                                </div>
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>Message</label>
-                                    <textarea name="message" rows="4" required style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}></textarea>
-                                </div>
-                                <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={loading}>Post Update</button>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* Resource Upload Tab */}
-                {activeTab === 'new-upload' && (
-                    <div className="fade-in" style={{ display: 'flex', justifyContent: 'center' }}>
-                        <div style={{ maxWidth: '700px', width: '100%', background: 'white', padding: '3rem', borderRadius: '20px', border: '1px solid #fee2e2', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}>
-                            <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#1e293b' }}>Upload Resource</h2>
-                            {msg && <div style={{ textAlign: 'center', padding: '1rem', background: msg.includes('Success') ? '#dcfce7' : '#fee2e2', color: msg.includes('Success') ? '#166534' : '#991b1b', borderRadius: '8px', marginBottom: '1.5rem' }}>{msg}</div>}
-
-                            <form onSubmit={handleUpload}>
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Target Batch</label>
-                                    <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                                        {batches.map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
-                                    </select>
-                                </div>
-                                <div style={{ marginBottom: '2rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Select Document</label>
-                                    <div onClick={() => document.getElementById('resFile').click()} style={{ border: '2px dashed #cbd5e1', padding: '3rem', borderRadius: '16px', textAlign: 'center', cursor: 'pointer', background: '#f8fafc' }}>
-                                        <div style={{ color: '#94a3b8', marginBottom: '1rem' }}><FaCloudUploadAlt size={40} /></div>
-                                        {file ? <div style={{ fontWeight: '600' }}>{file.name}</div> : <div style={{ color: '#64748b' }}>Click to browse file</div>}
-                                    </div>
-                                    <input id="resFile" type="file" onChange={e => setFile(e.target.files[0])} style={{ display: 'none' }} />
-                                </div>
-                                <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={loading}>Upload Resource</button>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* My Uploads Tab */}
-                {activeTab === 'my-uploads' && (
-                    <div className="fade-in" style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                        <h2 style={{ marginBottom: '2rem', color: '#1e293b' }}>My Uploads</h2>
-                        {myDocs.length === 0 ? <p style={{ color: '#94a3b8' }}>No uploads found.</p> :
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                                {myDocs.map(doc => (
-                                    <div key={doc._id} style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '12px', position: 'relative' }}>
-                                        <div style={{ marginBottom: '1rem', color: '#f97316' }}><FaFilePdf size={32} /></div>
-                                        <div style={{ fontWeight: '600', marginBottom: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.original_filename}</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{new Date(doc.upload_date).toLocaleDateString()}</div>
-                                        <button onClick={() => deleteDoc(doc._id)} style={{ position: 'absolute', top: '1rem', right: '1rem', border: 'none', background: '#fee2e2', color: '#ef4444', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaTrash size={12} /></button>
-                                        <a href={doc.file_path} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: '1rem', color: '#3b82f6', fontSize: '0.9rem', textDecoration: 'none', fontWeight: '500' }}>View File</a>
-                                    </div>
-                                ))}
+                {/* ═══════ PROFILE TAB ═══════ */}
+                {activeTab === 'profile' && (
+                    <div style={s.outerCard}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                            <div>
+                                <h2 style={{ ...s.sectionTitle, marginBottom: '0.25rem' }}>Teacher Profile</h2>
+                                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>Manage your account details.</p>
                             </div>
-                        }
+                            {!editMode && <button onClick={() => { setEditData({ full_name: user.name, email: user.email, department: user.department || '' }); setEditMode(true); }} style={s.declineBtn}>Edit Profile</button>}
+                        </div>
+                        {editMode ? (
+                            <form onSubmit={updateProfile}>
+                                <div className="chairman-profile-grid" style={{ marginBottom: '1.5rem' }}>
+                                    <div><label style={s.label}>Full Name</label><input type="text" value={editData.full_name} onChange={e => setEditData({ ...editData, full_name: e.target.value })} style={s.input} /></div>
+                                    <div><label style={s.label}>Email Address</label><input type="email" value={editData.email} onChange={e => setEditData({ ...editData, email: e.target.value })} style={s.input} /></div>
+                                    <div><label style={s.label}>Department</label><input type="text" value={editData.department} onChange={e => setEditData({ ...editData, department: e.target.value })} style={s.input} /></div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                    <button type="submit" style={s.publishBtn}>Save Changes</button>
+                                    <button type="button" onClick={() => setEditMode(false)} style={s.declineBtn}>Cancel</button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="chairman-profile-grid">
+                                <div style={s.profileCard}><label style={s.profileLabel}>Full Name</label><div style={s.profileValue}>{user.name}</div></div>
+                                <div style={s.profileCard}><label style={s.profileLabel}>Email Address</label><div style={s.profileValue}>{user.email}</div></div>
+                                <div style={s.profileCard}><label style={s.profileLabel}>Role</label><div style={s.profileValue}>{user.role}</div></div>
+                                <div style={s.profileCard}><label style={s.profileLabel}>Department</label><div style={s.profileValue}>{user.department || 'ICE'}</div></div>
+                            </div>
+                        )}
                     </div>
                 )}
-
             </div>
         </Layout>
     );

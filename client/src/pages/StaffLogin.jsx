@@ -32,17 +32,25 @@ const StaffLogin = () => {
         e.preventDefault();
         setError('');
         setLoading(true);
+        // Trim whitespace from email and password
+        const email = formData.email.trim();
+        const password = formData.password.trim();
+        const confirmPassword = formData.confirmPassword.trim();
+        const full_name = formData.full_name.trim();
+        const department = formData.department.trim();
+        const secret_code = formData.secret_code.trim();
+
         try {
             let res;
             if (isRegister) {
-                if (formData.password !== formData.confirmPassword) {
+                if (password !== confirmPassword) {
                     setError('Passwords do not match');
                     setLoading(false);
                     return;
                 }
-                res = await registerUser(formData);
+                res = await registerUser({ ...formData, email, password, confirmPassword, full_name, department, secret_code });
             } else {
-                res = await loginUser(formData.email, formData.password);
+                res = await loginUser(email, password);
             }
 
             if (res.success) {

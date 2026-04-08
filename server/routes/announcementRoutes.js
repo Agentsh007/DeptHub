@@ -60,8 +60,12 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
 
     try {
         let file_url = null;
+        console.log('Processing upload request for:', req.user.email);
+        console.log('Request Body:', req.body);
+        console.log('Request File:', req.file ? 'File present' : 'No file');
 
         if (req.file) {
+            console.log('Uploading file to Cloudinary...');
             const b64 = Buffer.from(req.file.buffer).toString('base64');
             const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
             const result = await cloudinary.uploader.upload(dataURI, {
@@ -69,6 +73,7 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
                 folder: "uni_connect_notices"
             });
             file_url = result.secure_url;
+            console.log('File uploaded to Cloudinary:', file_url);
         }
 
         // Determine Status
@@ -100,11 +105,12 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
         });
 
         const saved = await newAnnouncement.save();
+        console.log('Announcement saved successfully:', saved._id);
         res.json(saved);
 
     } catch (err) {
-        console.error('Upload Error:', err);
-        if (!res.headersSent) res.status(500).json({ msg: 'Server Error', error: err.message });
+        console.error('Upload Error Detailed:', err);
+        if (!res.headersSent) res.status(500).json({ msg: 'Server Error', error: err.message, stack: err.stack });
     }
 });
 
@@ -127,12 +133,12 @@ router.get('/', auth, async (req, res) => {
                 ]
             };
         } else if (role === 'CHAIRMAN') {
-            // Chairman sees Approved and Pending Approval (Not Pending Feedback)
+            // Chairman sees Approved and Pending Approval (Strictly excludes PENDING_FEEDBACK)
             query = {
-                status: { $in: ['APPROVED', 'PENDING_APPROVAL', 'PENDING'] } // 'PENDING' for backward compatibility
+                status: { $in: ['APPROVED', 'PENDING_APPROVAL'] }
             };
         } else if (role === 'TEACHER') {
-            // Teachers see Approved, Pending Feedback (for review), and Own posts
+            // Teachers see Approved, Pending Feedback Routines (for peer review), and Own posts
             query = {
                 $or: [
                     { status: 'APPROVED' },
@@ -141,8 +147,14 @@ router.get('/', auth, async (req, res) => {
                 ]
             };
         } else {
-            // Operator sees all
-            query = {};
+            // Operator sees all except pending feedback (unless they own it, but ops don't do feedback)
+            query = {
+                $or: [
+                    { status: 'APPROVED' },
+                    { status: 'PENDING_APPROVAL' },
+                    { author: req.user.id }
+                ]
+            };
         }
 
         const announcements = await Announcement.find(query)
@@ -180,8 +192,11 @@ router.delete('/:id', auth, async (req, res) => {
 
 // Update announcement status (Approve/Reject)
 router.put('/:id/status', auth, async (req, res) => {
-    if (req.user.role !== 'CHAIRMAN') {
-        return res.status(403).json({ msg: 'Not authorized to approve/reject' });
+    // Only Chairman or Author (Teacher) can update status
+    // Chairman: Approve/Reject any pending item
+    // Author: Move Routine from 'PENDING_FEEDBACK' to 'PENDING_APPROVAL'
+    if (req.user.role !== 'CHAIRMAN' && req.user.role !== 'TEACHER') {
+        return res.status(403).json({ msg: 'Not authorized' });
     }
 
     const { status, feedback } = req.body;
@@ -190,6 +205,16 @@ router.put('/:id/status', auth, async (req, res) => {
         const announcement = await Announcement.findById(req.params.id);
         if (!announcement) {
             return res.status(404).json({ msg: 'Announcement not found' });
+        }
+
+        // Teacher Validation
+        if (req.user.role === 'TEACHER') {
+            if (announcement.author.toString() !== req.user.id) {
+                return res.status(403).json({ msg: 'You can only update your own routines' });
+            }
+            if (status !== 'PENDING_APPROVAL') {
+                return res.status(400).json({ msg: 'Teachers can only send routines for approval' });
+            }
         }
 
         if (status) announcement.status = status;
