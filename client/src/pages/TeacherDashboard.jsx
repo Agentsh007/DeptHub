@@ -120,7 +120,10 @@ const TeacherDashboard = () => {
     const [file, setFile] = useState(null);
     const [msg, setMsg] = useState('');
     const [loading, setLoading] = useState(false);
-
+    // Add these with your other state declarations
+    const [peerFeedbackText, setPeerFeedbackText] = useState({}); // { [routineId]: 'text' }
+    const [peerFeedbackSending, setPeerFeedbackSending] = useState({}); // { [routineId]: true/false }
+    const [peerFeedbackSent, setPeerFeedbackSent] = useState({}); // { [routineId]: true }
     // Profile
     const [editMode, setEditMode] = useState(false);
     const [editData, setEditData] = useState({ full_name: '', email: '', department: '' });
@@ -169,11 +172,12 @@ const TeacherDashboard = () => {
             const res = await axios.get('/announcements');
             const allRoutines = res.data.filter(n => n.type === 'ROUTINE');
             setRoutines(allRoutines);
-            // Fetch feedback for routines pending feedback
-            const pendingFeedbackRoutines = allRoutines.filter(r => r.status === 'PENDING_FEEDBACK');
-            if (pendingFeedbackRoutines.length > 0) {
+
+            // Fetch feedback for ALL PENDING_FEEDBACK routines (own + peers)
+            const needsFeedback = allRoutines.filter(r => r.status === 'PENDING_FEEDBACK');
+            if (needsFeedback.length > 0) {
                 let allFeedback = [];
-                for (let r of pendingFeedbackRoutines) {
+                for (let r of needsFeedback) {
                     try {
                         const fbRes = await axios.get(`/feedback?target_announcement_id=${r._id}`);
                         allFeedback = [...allFeedback, ...fbRes.data];
@@ -276,7 +280,26 @@ const TeacherDashboard = () => {
             if (res.data.success) { alert('Profile Updated.'); setEditMode(false); await loadUser(); }
         } catch (err) { alert('Update failed'); }
     };
+    const submitPeerFeedback = async (routineId) => {
+        const text = peerFeedbackText[routineId]?.trim();
+        if (!text) return alert('Please write your feedback first.');
 
+        setPeerFeedbackSending(prev => ({ ...prev, [routineId]: true }));
+        try {
+            await axios.post('/feedback', {
+                message_content: text,
+                target_announcement: routineId
+            });
+            // Mark as sent and clear the input
+            setPeerFeedbackSent(prev => ({ ...prev, [routineId]: true }));
+            setPeerFeedbackText(prev => ({ ...prev, [routineId]: '' }));
+            fetchRoutines(); // refresh to show updated feedback count
+        } catch (err) {
+            alert('Failed to submit feedback. Please try again.');
+        } finally {
+            setPeerFeedbackSending(prev => ({ ...prev, [routineId]: false }));
+        }
+    };
 
 
     const deleteFeedback = async (id) => { if (!window.confirm('Delete this feedback?')) return; try { await axios.delete(`/feedback/${id}`); fetchRoutines(); } catch (err) { alert('Failed'); } };
@@ -303,7 +326,10 @@ const TeacherDashboard = () => {
     // Routine helpers
     const pendingRoutines = routines.filter(r => (r.status === 'PENDING_APPROVAL' || r.status === 'PENDING_FEEDBACK') && r.author?._id === user.id);
     const publishedRoutines = routines.filter(r => r.status === 'APPROVED');
-
+    // Routines from OTHER teachers that need peer review
+    const peerReviewRoutines = routines.filter(
+        r => r.status === 'PENDING_FEEDBACK' && r.author?._id !== user.id
+    );
 
     return (
         <Layout>
@@ -508,7 +534,110 @@ const TeacherDashboard = () => {
                             </form>
                         </div>
 
+                        {/* ═══ PEER REVIEW SECTION — routines from other teachers ═══ */}
+                        {peerReviewRoutines.length > 0 && (
+                            <div style={s.outerCard}>
+                                <h2 style={s.sectionTitle}>
+                                    👥 Peer Review Requests
+                                    <span style={{
+                                        marginLeft: '0.75rem',
+                                        background: '#fef3c7',
+                                        color: '#b45309',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '700',
+                                        padding: '0.2rem 0.6rem',
+                                        borderRadius: '999px'
+                                    }}>
+                                        {peerReviewRoutines.length} pending
+                                    </span>
+                                </h2>
+                                <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
+                                    Your colleagues have requested feedback on their routines before sending to the Chairman.
+                                </p>
 
+                                {peerReviewRoutines.map(r => (
+                                    <div key={r._id} style={{ ...s.noticeCard, borderLeft: '4px solid #f59e0b' }}>
+                                        {/* Routine info */}
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                <h4 style={{ fontWeight: '700', color: '#1e293b', margin: 0 }}>{r.title}</h4>
+                                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                                    by {r.author?.full_name} · {new Date(r.created_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            {r.content && (
+                                                <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0.5rem 0' }}>{r.content}</p>
+                                            )}
+                                            {r.file_url && (
+                                                <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={s.attachBtn}>
+                                                    <FaPaperclip /> View Routine Document
+                                                </a>
+                                            )}
+                                        </div>
+
+                                        {/* Feedback already given by others */}
+                                        {feedbackList.filter(f => f.target_announcement === r._id).length > 0 && (
+                                            <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                                <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                                                    Feedback so far:
+                                                </div>
+                                                {feedbackList.filter(f => f.target_announcement === r._id).map(f => (
+                                                    <div key={f._id} style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.35rem' }}>
+                                                        <strong>{f.from_user?.full_name || 'A colleague'}:</strong> {f.message_content}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Feedback input — hide if already submitted this session */}
+                                        {peerFeedbackSent[r._id] ? (
+                                            <div style={{
+                                                padding: '0.75rem 1rem',
+                                                background: '#dcfce7',
+                                                borderRadius: '8px',
+                                                color: '#166534',
+                                                fontSize: '0.9rem',
+                                                fontWeight: '500',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem'
+                                            }}>
+                                                ✓ Your feedback was submitted successfully.
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
+                                                <textarea
+                                                    rows="2"
+                                                    placeholder="Write your feedback for this routine..."
+                                                    value={peerFeedbackText[r._id] || ''}
+                                                    onChange={e => setPeerFeedbackText(prev => ({ ...prev, [r._id]: e.target.value }))}
+                                                    style={{
+                                                        ...s.textarea,
+                                                        flex: 1,
+                                                        marginBottom: 0,
+                                                        resize: 'vertical',
+                                                        minHeight: '60px'
+                                                    }}
+                                                />
+                                                <button
+                                                    onClick={() => submitPeerFeedback(r._id)}
+                                                    disabled={peerFeedbackSending[r._id] || !peerFeedbackText[r._id]?.trim()}
+                                                    style={{
+                                                        ...s.publishBtn,
+                                                        padding: '0.6rem 1.25rem',
+                                                        fontSize: '0.875rem',
+                                                        whiteSpace: 'nowrap',
+                                                        opacity: !peerFeedbackText[r._id]?.trim() ? 0.5 : 1
+                                                    }}
+                                                >
+                                                    {peerFeedbackSending[r._id] ? 'Sending...' : '✉ Submit'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Pending Routine / Routine for Approval */}
                         {pendingRoutines.length > 0 && (
