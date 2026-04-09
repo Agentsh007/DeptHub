@@ -3,10 +3,7 @@
     "version": "1.0.0",
     "description": "Root package config for Vercel deployment",
     "scripts": {
-        "build": "cd client && npm install && npm run build",
-        "postinstall": "cd client && npm install",
-        "reset-system": "node reset_system.js",
-        "seed": "node seed_data.js"
+        "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix server\""
     },
     "dependencies": {
         "bcryptjs": "^3.0.3",
@@ -22,5 +19,8 @@
     },
     "engines": {
         "node": ">=18"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
     }
 }
