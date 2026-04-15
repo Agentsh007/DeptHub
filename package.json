@@ -1,26 +1,33 @@
 {
-    "name": "uni-resource-root",
-    "version": "1.0.0",
-    "description": "Root package config for Vercel deployment",
-    "scripts": {
-        "build": "cd client && npm install && npm run build",
-        "postinstall": "cd client && npm install",
-        "reset-system": "node reset_system.js",
-        "seed": "node seed_data.js"
-    },
-    "dependencies": {
-        "bcryptjs": "^3.0.3",
-        "cloudinary": "^1.41.3",
-        "cors": "^2.8.6",
-        "dotenv": "^17.2.3",
-        "express": "^5.2.1",
-        "jsonwebtoken": "^9.0.3",
-        "mongodb-memory-server": "^11.0.1",
-        "mongoose": "^9.1.5",
-        "multer": "^2.0.2",
-        "multer-storage-cloudinary": "^4.0.0"
-    },
-    "engines": {
-        "node": ">=18"
-    }
+  "name": "uni-resource-root",
+  "version": "1.0.0",
+  "description": "Root package config for Vercel deployment",
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "postinstall": "cd client && npm install",
+    "reset-system": "node reset_system.js",
+    "seed": "node seed_data.js",
+    "client": "cd client && npm start",
+    "start": "cd server && nodemon index.js",
+    "dev": "concurrently \"npm run start\" \"npm run client\" "
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb-memory-server": "^11.0.1",
+    "mongoose": "^9.1.5",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14"
+  }
 }
