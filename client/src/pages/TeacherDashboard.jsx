@@ -1017,93 +1017,99 @@ const TeacherDashboard = () => {
                       </thead>
                       <tbody>
                         {notices
-                          .filter((n) => n.status === "APPROVED")
-                          .map((notice, index) => (
-                            <tr
-                              key={notice._id}
-                              onClick={() => openNotice(notice)} // ← Add this
-                              style={{
-                                borderBottom: "1px solid #f8fafc",
-                                cursor: "pointer",
-                                transition: "background 0.2s",
-                              }}
-                              onMouseOver={(e) =>
-                                (e.currentTarget.style.backgroundColor =
-                                  "#f8fafc")
-                              }
-                              onMouseOut={(e) =>
-                                (e.currentTarget.style.backgroundColor = "")
-                              }
-                            >
-                              <td
-                                style={{
-                                  padding: "1.1rem 1.5rem",
-                                  color: "#64748b",
-                                  fontSize: "0.9rem",
-                                }}
-                              >
-                                {index + 1}
-                              </td>
-                              <td
-                                style={{
-                                  padding: "1.1rem 1rem",
-                                  fontWeight: "500",
-                                  color: "#1e293b",
-                                  fontSize: "0.95rem",
-                                }}
-                              >
-                                {notice.title}
-                              </td>
-                              <td
-                                style={{
-                                  padding: "1.1rem 1rem",
-                                  color: "#64748b",
-                                  fontSize: "0.9rem",
-                                }}
-                              >
-                                {notice.author?.name || "Admin"}
-                              </td>
-                              <td
-                                style={{
-                                  padding: "1.1rem 1rem",
-                                  textAlign: "center",
-                                  color: "#64748b",
-                                  fontSize: "0.85rem",
-                                }}
-                              >
-                                {new Date(
-                                  notice.created_at,
-                                ).toLocaleDateString()}
-                              </td>
-                              <td
-                                style={{
-                                  padding: "1.1rem 1rem",
-                                  textAlign: "center",
-                                }}
-                              >
-                                {notice.file_url ? (
-                                  <FaFilePdf color="#ef4444" size={20} />
-                                ) : (
-                                  "—"
-                                )}
-                              </td>
-                              <td
-                                style={{
-                                  padding: "1.1rem 1.5rem",
-                                  textAlign: "center",
-                                }}
-                              >
-                                <span
+                          .filter((n) => (n.status === "APPROVED"))
+                          .map(
+                            (notice, index) =>
+                             (
+                                <tr
+                                  key={notice._id}
+                                  onClick={() => {
+                                    openNotice(notice);
+                                    console.log(notice);
+                                  }} // ← Add this
                                   style={{
-                                    color: "#3b82f6",
-                                    fontWeight: "500",
+                                    borderBottom: "1px solid #f8fafc",
+                                    cursor: "pointer",
+                                    transition: "background 0.2s",
                                   }}
+                                  onMouseOver={(e) =>
+                                    (e.currentTarget.style.backgroundColor =
+                                      "#f8fafc")
+                                  }
+                                  onMouseOut={(e) =>
+                                    (e.currentTarget.style.backgroundColor = "")
+                                  }
                                 >
-                                  View
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                                  <td
+                                    style={{
+                                      padding: "1.1rem 1.5rem",
+                                      color: "#64748b",
+                                      fontSize: "0.9rem",
+                                    }}
+                                  >
+                                    {index + 1}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "1.1rem 1rem",
+                                      fontWeight: "500",
+                                      color: "#1e293b",
+                                      fontSize: "0.95rem",
+                                    }}
+                                  >
+                                    {notice.title}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "1.1rem 1rem",
+                                      color: "#64748b",
+                                      fontSize: "0.9rem",
+                                    }}
+                                  >
+                                    {notice.author?.name || "Admin"}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "1.1rem 1rem",
+                                      textAlign: "center",
+                                      color: "#64748b",
+                                      fontSize: "0.85rem",
+                                    }}
+                                  >
+                                    {new Date(
+                                      notice.created_at,
+                                    ).toLocaleDateString()}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "1.1rem 1rem",
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    {notice.file_url ? (
+                                      <FaFilePdf color="#ef4444" size={20} />
+                                    ) : (
+                                      "—"
+                                    )}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "1.1rem 1.5rem",
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        color: "#3b82f6",
+                                        fontWeight: "500",
+                                      }}
+                                    >
+                                      View
+                                    </span>
+                                  </td>
+                                </tr>
+                              ),
+                          )}
                         {notices.filter((n) => n.status === "APPROVED")
                           .length === 0 && (
                           <tr>
