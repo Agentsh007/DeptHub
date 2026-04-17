@@ -23,26 +23,26 @@ const upload = multer({
     }
 });
 
-// @route   GET api/announcements/public
-// @desc    Get all public notices (for Home Page)
-// @access  Public
-router.get('/public', async (req, res) => {
-    try {
-        const notices = await Announcement.find({ type: 'NOTICE', status: 'APPROVED' })
-            .populate('author', 'full_name role')
-            .sort({ created_at: -1 })
-            .limit(10); // Limit to latest 10
-        res.json(notices);
-    } catch (err) {
-        res.status(500).json({ msg: 'Server Error' });
-    }
-});
+// // @route   GET api/announcements/public
+// // @desc    Get all public notices (for Home Page)
+// // @access  Public
+// router.get('/public', async (req, res) => {
+//     try {
+//         const notices = await Announcement.find({ type: 'NOTICE', status: 'APPROVED' })
+//             .populate('author', 'full_name role')
+//             .sort({ created_at: -1 })
+//             .limit(10); // Limit to latest 10 notices for homepage display
+//         res.json(notices);
+//     } catch (err) {
+//         res.status(500).json({ msg: 'Server Error' });
+//     }
+// });
 
 // @route   POST api/announcements
 // @desc    Create a notice or announcement
 // @access  Chairman, Operator, CC, Teacher
 router.post('/', auth, upload.single('file'), async (req, res) => {
-    const { title, content, target_batch, type } = req.body;
+    const { title, content, target_batch, type, target_audience } = req.body;
     const { role } = req.user;
 
     // Permission Check
@@ -94,10 +94,16 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
             status = 'PENDING_APPROVAL';
         }
 
+        const allowedAudience = ['Teacher', 'Student', 'Everyone'];
+        const normalizedAudience = allowedAudience.includes(target_audience)
+            ? target_audience
+            : 'Everyone';
+
         const newAnnouncement = new Announcement({
             title,
             content,
             author: req.user.id,
+            target_audience: normalizedAudience,
             target_batch: target_batch || null,
             type,
             file_url,

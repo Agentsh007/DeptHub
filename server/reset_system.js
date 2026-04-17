@@ -1,17 +1,10 @@
-const mongoose = require('./server/node_modules/mongoose');
+const mongoose = require('./node_modules/mongoose');
 const dotenv = require('dotenv');
 const cloudinary = require('cloudinary').v2;
 const path = require('path');
 
 // Load env vars
-dotenv.config({ path: path.join(__dirname, 'server/.env') });
-
-// Load Models
-const User = require('./server/models/User');
-const Batch = require('./server/models/Batch');
-const Document = require('./server/models/Document');
-const Announcement = require('./server/models/Announcement');
-const Feedback = require('./server/models/Feedback');
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Config Cloudinary
 cloudinary.config({
@@ -32,15 +25,9 @@ const resetSystem = async () => {
         console.log('MongoDB Connected.');
 
         // 2. Clear Database
-        console.log('Clearing Database collections...');
-        const models = { User, Batch, Document, Announcement, Feedback };
-
-        for (const [name, model] of Object.entries(models)) {
-            const count = await model.countDocuments();
-            await model.deleteMany({});
-            console.log(`- Deleted ${count} ${name}s`);
-        }
-        console.log('✔ Database wiped successfully.');
+        console.log('Dropping MongoDB database...');
+        await mongoose.connection.dropDatabase();
+        console.log('✔ MongoDB database dropped successfully.');
 
         // 3. Clear Cloudinary
         console.log('Clearing Cloudinary resources...');

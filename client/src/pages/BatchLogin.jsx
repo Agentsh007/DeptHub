@@ -12,7 +12,7 @@ const BatchLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+ 
   React.useEffect(() => {
     if (user) {
       navigate("/batch");

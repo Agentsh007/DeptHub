@@ -1,37 +1,56 @@
 // Start of: ./client\src\App.jsx
-import React, { useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, AuthContext } from './context/AuthContext';
-import Home from './pages/Home';
-import StaffLogin from './pages/StaffLogin';
-import BatchLogin from './pages/BatchLogin';
-import ChairmanDashboard from './pages/ChairmanDashboard';
-import ComputerOperatorDashboard from './pages/ComputerOperatorDashboard';
-import TeacherDashboard from './pages/TeacherDashboard';
-import BatchDashboard from './pages/BatchDashboard';
-import BatchFiles from './pages/BatchFiles'; // Added back
-import { Loader } from './components/UI';
-import NetworkStatus from './components/NetworkStatus';
+import React, { useContext } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
+import Home from "./pages/Home";
+import StaffLogin from "./pages/StaffLogin";
+import BatchLogin from "./pages/BatchLogin";
+import ChairmanDashboard from "./pages/ChairmanDashboard";
+import ComputerOperatorDashboard from "./pages/ComputerOperatorDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard/TeacherDashboard";
+import BatchDashboard from "./pages/BatchDashboard";
+import BatchFiles from "./pages/BatchFiles"; // Added back
+import { Loader } from "./components/UI";
+import NetworkStatus from "./components/NetworkStatus";
 
-import './App.css';
+import "./App.css";
 
 const PrivateRoute = ({ children, role }) => {
   const { user, loading } = useContext(AuthContext);
 
-  if (loading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Loader /></div>;
+  if (loading)
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Loader />
+      </div>
+    );
 
   if (!user) return <Navigate to="/" />;
 
   // Role check
   if (role) {
-    const authorized = Array.isArray(role) ? role.includes(user.role) : user.role === role;
+    const authorized = Array.isArray(role)
+      ? role.includes(user.role)
+      : user.role === role;
     if (!authorized) {
       // Handle redirect logic based on their actual role if they try accessing wrong route
-      if (user.role === 'CHAIRMAN') return <Navigate to="/chairman" />;
-      if (user.role === 'CHAIRMAN') return <Navigate to="/chairman" />;
-      if (user.role === 'COMPUTER_OPERATOR') return <Navigate to="/operator" />;
-      if (user.role === 'TEACHER') return <Navigate to="/teacher" />;
-      if (user.role === 'BATCH') return <Navigate to="/batch" />;
+      if (user.role === "CHAIRMAN") return <Navigate to="/chairman" />;
+      if (user.role === "CHAIRMAN") return <Navigate to="/chairman" />;
+      if (user.role === "COMPUTER_OPERATOR") return <Navigate to="/operator" />;
+      if (user.role === "TEACHER") return <Navigate to="/teacher" />;
+      if (user.role === "BATCH") return <Navigate to="/batch" />;
       return <Navigate to="/" />;
     }
   }
@@ -51,23 +70,43 @@ const App = () => {
 
           <Route
             path="/chairman"
-            element={<PrivateRoute role="CHAIRMAN"><ChairmanDashboard /></PrivateRoute>}
+            element={
+              <PrivateRoute role="CHAIRMAN">
+                <ChairmanDashboard />
+              </PrivateRoute>
+            }
           />
           <Route
             path="/operator"
-            element={<PrivateRoute role="COMPUTER_OPERATOR"><ComputerOperatorDashboard /></PrivateRoute>}
+            element={
+              <PrivateRoute role="COMPUTER_OPERATOR">
+                <ComputerOperatorDashboard />
+              </PrivateRoute>
+            }
           />
           <Route
             path="/teacher"
-            element={<PrivateRoute role="TEACHER"><TeacherDashboard /></PrivateRoute>}
+            element={
+              <PrivateRoute role="TEACHER">
+                <TeacherDashboard />
+              </PrivateRoute>
+            }
           />
           <Route
             path="/batch/*"
-            element={<PrivateRoute role="BATCH"><BatchDashboard /></PrivateRoute>}
+            element={
+              <PrivateRoute role="BATCH">
+                <BatchDashboard />
+              </PrivateRoute>
+            }
           />
           <Route
             path="/batch/teacher/:teacherId"
-            element={<PrivateRoute role="BATCH"><BatchFiles /></PrivateRoute>}
+            element={
+              <PrivateRoute role="BATCH">
+                <BatchFiles />
+              </PrivateRoute>
+            }
           />
           {/* Fallback/Central Dashboard Route */}
           <Route path="/dashboard" element={<DashboardRedirect />} />
@@ -84,10 +123,10 @@ const DashboardRedirect = () => {
   if (loading) return <Loader />;
   if (!user) return <Navigate to="/" />;
 
-  if (user.role === 'CHAIRMAN') return <Navigate to="/chairman" />;
-  if (user.role === 'COMPUTER_OPERATOR') return <Navigate to="/operator" />;
-  if (user.role === 'TEACHER') return <Navigate to="/teacher" />;
-  if (user.role === 'BATCH') return <Navigate to="/batch" />;
+  if (user.role === "CHAIRMAN") return <Navigate to="/chairman" />;
+  if (user.role === "COMPUTER_OPERATOR") return <Navigate to="/operator" />;
+  if (user.role === "TEACHER") return <Navigate to="/teacher" />;
+  if (user.role === "BATCH") return <Navigate to="/batch" />;
 
   return <Navigate to="/" />;
 };
@@ -450,6 +489,1245 @@ export default NetworkStatus;
 
 // End of file
 
+// Start of: ./client\src\components\Notice.jsx
+// import React from 'react'
+// import s from "../utils/teacherDashboard";
+// import axios from "../utils/axiosConfig";
+// const Notice = ({ showNoticeForm, setShowNoticeForm , notices, openNotice, handleNoticeSubmit, user, loading, noticeAudience, setNoticeAudience, fetchNotices}) => {
+//   return (
+//     <>
+//                 {!showNoticeForm ? (
+//                   <>
+//                     <div
+//                       style={{
+//                         display: "flex",
+//                         justifyContent: "space-between",
+//                         alignItems: "center",
+//                         marginBottom: "1.5rem",
+//                         flexWrap: "wrap",
+//                         gap: "1rem",
+//                       }}
+//                     >
+//                       <h2 style={{ ...s.sectionTitle, marginBottom: 0 }}>
+//                         Latest Notices
+//                       </h2>
+//                       <button
+//                         onClick={() => setShowNoticeForm(true)}
+//                         style={s.publishBtn}
+//                       >
+//                         Create Notice
+//                       </button>
+//                     </div>
+
+//                     <div
+//                       style={{
+//                         ...s.outerCard,
+//                         padding: "0",
+//                         overflow: "hidden",
+//                         borderRadius: "12px",
+//                       }}
+//                     >
+//                       <div style={{ overflowX: "auto" }}>
+//                         <table
+//                           style={{
+//                             width: "100%",
+//                             borderCollapse: "collapse",
+//                             minWidth: "700px",
+//                           }}
+//                         >
+//                           <thead>
+//                             <tr
+//                               style={{
+//                                 borderBottom: "2px solid #e2e8f0",
+//                                 background: "#f8fafc",
+//                               }}
+//                             >
+//                               <th
+//                                 style={{
+//                                   padding: "1.2rem 1.5rem",
+//                                   textAlign: "left",
+//                                   fontSize: "0.8rem",
+//                                   color: "#64748b",
+//                                   fontWeight: "600",
+//                                   textTransform: "uppercase",
+//                                 }}
+//                               >
+//                                 NO
+//                               </th>
+//                               <th
+//                                 style={{
+//                                   padding: "1.2rem 1rem",
+//                                   textAlign: "left",
+//                                   fontSize: "0.8rem",
+//                                   color: "#64748b",
+//                                   fontWeight: "600",
+//                                   textTransform: "uppercase",
+//                                 }}
+//                               >
+//                                 TITLE
+//                               </th>
+//                               <th
+//                                 style={{
+//                                   padding: "1.2rem 1rem",
+//                                   textAlign: "left",
+//                                   fontSize: "0.8rem",
+//                                   color: "#64748b",
+//                                   fontWeight: "600",
+//                                   textTransform: "uppercase",
+//                                 }}
+//                               >
+//                                 AUTHOR
+//                               </th>
+//                               <th
+//                                 style={{
+//                                   padding: "1.2rem 1rem",
+//                                   textAlign: "center",
+//                                   fontSize: "0.8rem",
+//                                   color: "#64748b",
+//                                   fontWeight: "600",
+//                                   textTransform: "uppercase",
+//                                 }}
+//                               >
+//                                 DATE
+//                               </th>
+//                               <th
+//                                 style={{
+//                                   padding: "1.2rem 1rem",
+//                                   textAlign: "center",
+//                                   fontSize: "0.8rem",
+//                                   color: "#64748b",
+//                                   fontWeight: "600",
+//                                   textTransform: "uppercase",
+//                                 }}
+//                               >
+//                                 FILES
+//                               </th>
+//                               <th
+//                                 style={{
+//                                   padding: "1.2rem 1.5rem",
+//                                   textAlign: "center",
+//                                   fontSize: "0.8rem",
+//                                   color: "#64748b",
+//                                   fontWeight: "600",
+//                                   textTransform: "uppercase",
+//                                 }}
+//                               >
+//                                 ACTION
+//                               </th>
+//                             </tr>
+//                           </thead>
+//                           <tbody>
+//                             {notices
+//                               .filter(
+//                                 (n) =>
+//                                   n.status === "APPROVED" &&
+//                                   n.target_audience !== "Student",
+//                               )
+//                               .map((notice, index) => (
+//                                 <tr
+//                                   key={notice._id}
+//                                   onClick={() => {
+//                                     openNotice(notice);
+//                                     // console.log(notice);
+//                                   }} // ← Add this
+//                                   style={{
+//                                     borderBottom: "1px solid #f8fafc",
+//                                     cursor: "pointer",
+//                                     transition: "background 0.2s",
+//                                   }}
+//                                   onMouseOver={(e) =>
+//                                     (e.currentTarget.style.backgroundColor =
+//                                       "#f8fafc")
+//                                   }
+//                                   onMouseOut={(e) =>
+//                                     (e.currentTarget.style.backgroundColor = "")
+//                                   }
+//                                 >
+//                                   <td
+//                                     style={{
+//                                       padding: "1.1rem 1.5rem",
+//                                       color: "#64748b",
+//                                       fontSize: "0.9rem",
+//                                     }}
+//                                   >
+//                                     {index + 1}
+//                                   </td>
+//                                   <td
+//                                     style={{
+//                                       padding: "1.1rem 1rem",
+//                                       fontWeight: "500",
+//                                       color: "#1e293b",
+//                                       fontSize: "0.95rem",
+//                                     }}
+//                                   >
+//                                     {notice.title}
+//                                   </td>
+//                                   <td
+//                                     style={{
+//                                       padding: "1.1rem 1rem",
+//                                       color: "#64748b",
+//                                       fontSize: "0.9rem",
+//                                     }}
+//                                   >
+//                                     {notice.author?.name || "Admin"}
+//                                   </td>
+//                                   <td
+//                                     style={{
+//                                       padding: "1.1rem 1rem",
+//                                       textAlign: "center",
+//                                       color: "#64748b",
+//                                       fontSize: "0.85rem",
+//                                     }}
+//                                   >
+//                                     {new Date(
+//                                       notice.created_at,
+//                                     ).toLocaleDateString()}
+//                                   </td>
+//                                   <td
+//                                     style={{
+//                                       padding: "1.1rem 1rem",
+//                                       textAlign: "center",
+//                                     }}
+//                                   >
+//                                     {notice.file_url ? (
+//                                       <FaFilePdf color="#ef4444" size={20} />
+//                                     ) : (
+//                                       "—"
+//                                     )}
+//                                   </td>
+//                                   <td
+//                                     style={{
+//                                       padding: "1.1rem 1.5rem",
+//                                       textAlign: "center",
+//                                     }}
+//                                   >
+//                                     <span
+//                                       style={{
+//                                         color: "#3b82f6",
+//                                         fontWeight: "500",
+//                                       }}
+//                                     >
+//                                       View
+//                                     </span>
+//                                   </td>
+//                                 </tr>
+//                               ))}
+//                             {notices.filter((n) => n.status === "APPROVED")
+//                               .length === 0 && (
+//                               <tr>
+//                                 <td
+//                                   colSpan="6"
+//                                   style={{
+//                                     padding: "3rem",
+//                                     textAlign: "center",
+//                                     color: "#94a3b8",
+//                                   }}
+//                                 >
+//                                   No notices found.
+//                                 </td>
+//                               </tr>
+//                             )}
+//                           </tbody>
+//                         </table>
+//                       </div>
+//                     </div>
+//                   </>
+//                 ) : (
+//                   <>
+//                     <div style={s.outerCard}>
+//                       <h2 style={s.sectionTitle}>📣 Post New Notice</h2>
+//                       <form onSubmit={handleNoticeSubmit}>
+//                         <div style={{ marginBottom: "1.25rem" }}>
+//                           <input
+//                             name="noticeTitle"
+//                             placeholder="Notice Title (e.g. Holi Holiday)"
+//                             style={s.input}
+//                             required
+//                           />
+//                         </div>
+//                         <div style={{ marginBottom: "1.25rem" }}>
+//                           <textarea
+//                             name="noticeContent"
+//                             placeholder="Notice Details"
+//                             rows="4"
+//                             style={s.textarea}
+//                             required
+//                           ></textarea>
+//                         </div>
+//                         <div style={{ marginBottom: "1.25rem" }}>
+//                           <label style={s.label}>
+//                             Attach Document (PDF/Image - Optional)
+//                           </label>
+//                           <input
+//                             name="noticeFile"
+//                             type="file"
+//                             accept=".pdf,.jpg,.png,.jpeg"
+//                             style={{ fontSize: "0.9rem" }}
+//                           />
+//                         </div>
+//                         <div style={{ marginBottom: "1.25rem" }}>
+//                           <label style={s.label}>Select Audience</label>
+//                           <select
+//                             name="audience"
+//                             style={s.input}
+//                             value={noticeAudience}
+//                             onChange={(e) => setNoticeAudience(e.target.value)}
+//                           >
+//                             <option value="Everyone">Everyone</option>
+//                             <option value="Teacher">Teacher Only</option>
+//                             <option value="Student">Student Only</option>
+//                           </select>
+//                         </div>
+//                         <div
+//                           style={{
+//                             display: "flex",
+//                             gap: "0.75rem",
+//                             justifyContent: "center",
+//                             flexWrap: "wrap",
+//                           }}
+//                         >
+//                           <button
+//                             type="submit"
+//                             style={{ ...s.submitBtn, margin: 0 }}
+//                             disabled={loading}
+//                           >
+//                             Send for Approval
+//                           </button>
+//                           <button
+//                             type="button"
+//                             onClick={() => setShowNoticeForm(false)}
+//                             style={{ ...s.declineBtn, padding: "0.85rem 2rem" }}
+//                           >
+//                             Cancel
+//                           </button>
+//                         </div>
+//                       </form>
+//                     </div>
+//                     <div style={s.outerCard}>
+//                       <h2 style={s.sectionTitle}>⏳ Pending Notice</h2>
+//                       {notices.filter(
+//                         (n) =>
+//                           (n.status === "PENDING" ||
+//                             n.status === "PENDING_APPROVAL") &&
+//                           n.author?._id === user.id,
+//                       ).length === 0 ? (
+//                         <p style={{ color: "#94a3b8", fontStyle: "italic" }}>
+//                           No pending notices.
+//                         </p>
+//                       ) : (
+//                         notices
+//                           .filter(
+//                             (n) =>
+//                               (n.status === "PENDING" ||
+//                                 n.status === "PENDING_APPROVAL") &&
+//                               n.author?._id === user.id,
+//                           )
+//                           .map((item) => (
+//                             <div key={item._id} style={s.noticeCard}>
+//                               <div className="chairman-card-row">
+//                                 <div style={{ flex: 1, minWidth: 0 }}>
+//                                   <h4
+//                                     style={{
+//                                       fontSize: "1.05rem",
+//                                       fontWeight: "700",
+//                                       color: "#1e293b",
+//                                       marginBottom: "0.25rem",
+//                                     }}
+//                                   >
+//                                     {item.title}
+//                                   </h4>
+//                                   <p
+//                                     style={{
+//                                       color: "#475569",
+//                                       fontSize: "0.9rem",
+//                                       margin: "0 0 0.4rem",
+//                                       lineHeight: "1.5",
+//                                     }}
+//                                   >
+//                                     {item.content}
+//                                   </p>
+//                                   {item.file_url && (
+//                                     <a
+//                                       href={item.file_url}
+//                                       target="_blank"
+//                                       rel="noopener noreferrer"
+//                                       style={s.attachBtn}
+//                                     >
+//                                       <FaPaperclip /> View Attached Document
+//                                     </a>
+//                                   )}
+//                                 </div>
+//                                 <button
+//                                   onClick={() => {
+//                                     if (
+//                                       window.confirm("Delete this pending notice?")
+//                                     ) {
+//                                       axios
+//                                         .delete(`/announcements/${item._id}`)
+//                                         .then(() => fetchNotices());
+//                                     }
+//                                   }}
+//                                   style={s.deleteBtn}
+//                                 >
+//                                   <FaTrash />
+//                                 </button>
+//                               </div>
+//                             </div>
+//                           ))
+//                       )}
+//                     </div>
+//                   </>
+//                 )}
+//               </>
+//   )
+// }
+
+// export default Notice
+
+import React from "react";
+import {
+  FaPaperclip,
+  FaTrash,
+  FaFilePdf,
+  FaImage,
+  FaFolder,
+  FaBullhorn,
+} from "react-icons/fa";
+import axios from "../utils/axiosConfig";
+
+/**
+ * Notice — Shared notice component for TeacherDashboard and BatchDashboard.
+ *
+ * Props:
+ *   mode              "teacher" | "student"  (default: "teacher")
+ *   notices           array  — pass `notices` from Teacher, `announcements` from Batch
+ *   openNotice        fn(notice) — opens the NoticeDetail modal
+ *
+ * Teacher-only props (ignored in student mode):
+ *   showNoticeForm    bool
+ *   setShowNoticeForm fn
+ *   handleNoticeSubmit fn(e)
+ *   user              object { id, ... }
+ *   loading           bool
+ *   noticeAudience    string
+ *   setNoticeAudience fn
+ *   fetchNotices      fn  — refresh callback after delete
+ */
+const Notice = ({
+  mode = "teacher",
+  showNoticeForm,
+  setShowNoticeForm,
+  notices = [],
+  openNotice,
+  handleNoticeSubmit,
+  user,
+  loading,
+  noticeAudience,
+  setNoticeAudience,
+  fetchNotices,
+}) => {
+  // ─── Self-contained styles (no external `s` import dependency) ────────────
+  const st = {
+    outerCard: {
+      background: "#ffffff",
+      borderRadius: "16px",
+      padding: "1.75rem",
+      border: "1px solid #e2e8f0",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+      marginBottom: "1.5rem",
+    },
+    sectionTitle: {
+      fontSize: "1.3rem",
+      fontWeight: "700",
+      color: "#1e293b",
+      marginBottom: "1.25rem",
+    },
+    publishBtn: {
+      background: "#2563eb",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      padding: "0.7rem 1.5rem",
+      cursor: "pointer",
+      fontWeight: "600",
+      fontSize: "0.95rem",
+    },
+    submitBtn: {
+      background: "#16a34a",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      padding: "0.85rem 2rem",
+      cursor: "pointer",
+      fontWeight: "600",
+      fontSize: "0.95rem",
+      margin: 0,
+    },
+    declineBtn: {
+      background: "#f1f5f9",
+      color: "#475569",
+      border: "1px solid #e2e8f0",
+      borderRadius: "8px",
+      padding: "0.85rem 2rem",
+      cursor: "pointer",
+      fontWeight: "600",
+      fontSize: "0.95rem",
+    },
+    input: {
+      width: "100%",
+      padding: "0.75rem 1rem",
+      borderRadius: "8px",
+      border: "1px solid #e2e8f0",
+      fontSize: "0.95rem",
+      outline: "none",
+      boxSizing: "border-box",
+      fontFamily: "inherit",
+    },
+    textarea: {
+      width: "100%",
+      padding: "0.75rem 1rem",
+      borderRadius: "8px",
+      border: "1px solid #e2e8f0",
+      fontSize: "0.95rem",
+      outline: "none",
+      resize: "vertical",
+      fontFamily: "inherit",
+      boxSizing: "border-box",
+    },
+    label: {
+      display: "block",
+      fontWeight: "600",
+      color: "#475569",
+      marginBottom: "0.4rem",
+      fontSize: "0.9rem",
+    },
+    noticeCard: {
+      background: "#f8fafc",
+      borderRadius: "12px",
+      padding: "1.25rem 1.5rem",
+      marginBottom: "1rem",
+      border: "1px solid #e2e8f0",
+    },
+    attachBtn: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "0.4rem",
+      color: "#2563eb",
+      textDecoration: "none",
+      fontSize: "0.9rem",
+      fontWeight: "500",
+    },
+    deleteBtn: {
+      background: "#fef2f2",
+      color: "#ef4444",
+      border: "none",
+      borderRadius: "8px",
+      padding: "0.5rem 0.75rem",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
+  };
+
+  // ─── Filter helpers ────────────────────────────────────────────────────────
+  // BUG FIX: original Notice.jsx checked notices.filter(...APPROVED).length === 0
+  // against all APPROVED notices, not the narrowed display list — wrong empty state.
+  // Fixed: derive approvedNotices first, then check its length.
+
+  const approvedNotices =
+    mode === "teacher"
+      ? notices.filter(
+          (n) => n.status === "APPROVED" && n.target_audience !== "Student",
+        )
+      : notices.filter(
+          // Students see notices explicitly targeting them that are approved.
+          // Added status === "APPROVED" guard (missing in original BatchDashboard).
+          (n) =>
+            n.status === "APPROVED" &&
+            (n.type === "NOTICE" || n.type === "ANNOUNCEMENT") &&
+            n.target_audience === "Student",
+        );
+
+  // Pending notices authored by the current teacher (only used in teacher mode)
+  const pendingNotices = notices.filter(
+    (n) =>
+      (n.status === "PENDING" || n.status === "PENDING_APPROVAL") &&
+      n.author?._id === user?.id,
+  );
+
+  // ─── File-type helpers (shared by both modes) ─────────────────────────────
+  const fileType = (url) => {
+    if (!url) return null;
+    if (url.toLowerCase().endsWith(".pdf")) return "pdf";
+    if (/\.(jpeg|jpg|gif|png|webp)$/i.test(url)) return "img";
+    return "file";
+  };
+
+  const FileIcon = ({ url, size = 20 }) => {
+    const type = fileType(url);
+    if (type === "pdf") return <FaFilePdf size={size} color="#ef4444" />;
+    if (type === "img") return <FaImage size={size} color="#3b82f6" />;
+    return <FaFolder size={size} color="#64748b" />;
+  };
+
+  const fileLabel = (url) => {
+    const type = fileType(url);
+    if (type === "pdf") return "PDF";
+    if (type === "img") return "IMG";
+    return "FILE";
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TEACHER MODE
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (mode === "teacher") {
+    // ── Notice list view ────────────────────────────────────────────────────
+    if (!showNoticeForm) {
+      return (
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.5rem",
+              flexWrap: "wrap",
+              gap: "1rem",
+            }}
+          >
+            <h2 style={{ ...st.sectionTitle, marginBottom: 0 }}>
+              Latest Notices
+            </h2>
+            <button
+              onClick={() => setShowNoticeForm(true)}
+              style={st.publishBtn}
+            >
+              Create Notice
+            </button>
+          </div>
+
+          <div
+            style={{
+              ...st.outerCard,
+              padding: "0",
+              overflow: "hidden",
+              borderRadius: "12px",
+            }}
+          >
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  minWidth: "700px",
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      borderBottom: "2px solid #e2e8f0",
+                      background: "#f8fafc",
+                    }}
+                  >
+                    {[
+                      { label: "NO", align: "left", pad: "1.2rem 1.5rem" },
+                      { label: "TITLE", align: "left", pad: "1.2rem 1rem" },
+                      { label: "AUTHOR", align: "left", pad: "1.2rem 1rem" },
+                      { label: "DATE", align: "center", pad: "1.2rem 1rem" },
+                      { label: "FILES", align: "center", pad: "1.2rem 1rem" },
+                      {
+                        label: "ACTION",
+                        align: "center",
+                        pad: "1.2rem 1.5rem",
+                      },
+                    ].map(({ label, align, pad }) => (
+                      <th
+                        key={label}
+                        style={{
+                          padding: pad,
+                          textAlign: align,
+                          fontSize: "0.8rem",
+                          color: "#64748b",
+                          fontWeight: "600",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* BUG FIX: was checking notices.filter(APPROVED).length === 0
+                      which is the wrong list — now correctly checks approvedNotices */}
+                  {approvedNotices.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="6"
+                        style={{
+                          padding: "3rem",
+                          textAlign: "center",
+                          color: "#94a3b8",
+                        }}
+                      >
+                        No notices found.
+                      </td>
+                    </tr>
+                  ) : (
+                    approvedNotices.map((notice, index) => (
+                      <tr
+                        key={notice._id}
+                        onClick={() => openNotice(notice)}
+                        style={{
+                          borderBottom: "1px solid #f1f5f9",
+                          cursor: "pointer",
+                          transition: "background 0.2s",
+                        }}
+                        onMouseOver={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#f8fafc")
+                        }
+                        onMouseOut={(e) =>
+                          (e.currentTarget.style.backgroundColor = "")
+                        }
+                      >
+                        <td
+                          style={{
+                            padding: "1.1rem 1.5rem",
+                            color: "#64748b",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {index + 1}
+                        </td>
+                        <td
+                          style={{
+                            padding: "1.1rem 1rem",
+                            fontWeight: "500",
+                            color: "#1e293b",
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {notice.title}
+                        </td>
+                        <td
+                          style={{
+                            padding: "1.1rem 1rem",
+                            color: "#64748b",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {notice.author?.name || "Admin"}
+                        </td>
+                        <td
+                          style={{
+                            padding: "1.1rem 1rem",
+                            textAlign: "center",
+                            color: "#64748b",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          {new Date(notice.created_at).toLocaleDateString()}
+                        </td>
+                        <td
+                          style={{
+                            padding: "1.1rem 1rem",
+                            textAlign: "center",
+                          }}
+                        >
+                          {notice.file_url ? (
+                            // BUG FIX: original had bare <FaFilePdf /> here with no
+                            // import. Now using FileIcon helper + stopPropagation so
+                            // clicking file link doesn't also trigger openNotice.
+                            <a
+                              href={notice.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                textDecoration: "none",
+                                fontSize: "0.82rem",
+                                color: "#475569",
+                              }}
+                            >
+                              <FileIcon url={notice.file_url} />
+                              <span>{fileLabel(notice.file_url)}</span>
+                            </a>
+                          ) : (
+                            <span style={{ color: "#cbd5e1" }}>—</span>
+                          )}
+                        </td>
+                        <td
+                          style={{
+                            padding: "1.1rem 1.5rem",
+                            textAlign: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              padding: "0.3rem 0.9rem",
+                              borderRadius: "20px",
+                              fontSize: "0.82rem",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            View
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // ── Create notice form + pending notices ─────────────────────────────────
+    return (
+      <>
+        <div style={st.outerCard}>
+          <h2 style={st.sectionTitle}>📣 Post New Notice</h2>
+          <form onSubmit={handleNoticeSubmit}>
+            <div style={{ marginBottom: "1.25rem" }}>
+              <input
+                name="noticeTitle"
+                placeholder="Notice Title (e.g. Holi Holiday)"
+                style={st.input}
+                required
+              />
+            </div>
+            <div style={{ marginBottom: "1.25rem" }}>
+              <textarea
+                name="noticeContent"
+                placeholder="Notice Details"
+                rows="4"
+                style={st.textarea}
+                required
+              />
+            </div>
+            <div style={{ marginBottom: "1.25rem" }}>
+              <label style={st.label}>
+                Attach Document (PDF/Image - Optional)
+              </label>
+              <input
+                name="noticeFile"
+                type="file"
+                accept=".pdf,.jpg,.png,.jpeg"
+                style={{ fontSize: "0.9rem" }}
+              />
+            </div>
+            <div style={{ marginBottom: "1.25rem" }}>
+              <label style={st.label}>Select Audience</label>
+              <select
+                name="audience"
+                style={st.input}
+                value={noticeAudience}
+                onChange={(e) => setNoticeAudience(e.target.value)}
+              >
+                <option value="Everyone">Everyone</option>
+                <option value="Teacher">Teacher Only</option>
+                <option value="Student">Student Only</option>
+              </select>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <button type="submit" style={st.submitBtn} disabled={loading}>
+                {loading ? "Sending…" : "Send for Approval"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowNoticeForm(false)}
+                style={st.declineBtn}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div style={st.outerCard}>
+          <h2 style={st.sectionTitle}>⏳ Pending Notices</h2>
+          {pendingNotices.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontStyle: "italic" }}>
+              No pending notices.
+            </p>
+          ) : (
+            pendingNotices.map((item) => (
+              <div key={item._id} style={st.noticeCard}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: "1rem",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4
+                      style={{
+                        fontSize: "1.05rem",
+                        fontWeight: "700",
+                        color: "#1e293b",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {item.title}
+                    </h4>
+                    <p
+                      style={{
+                        color: "#475569",
+                        fontSize: "0.9rem",
+                        margin: "0 0 0.4rem",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      {item.content}
+                    </p>
+                    {item.file_url && (
+                      <a
+                        href={item.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={st.attachBtn}
+                      >
+                        {/* BUG FIX: FaPaperclip was used but not imported in original */}
+                        <FaPaperclip /> View Attached Document
+                      </a>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Delete this pending notice?")) {
+                        axios
+                          .delete(`/announcements/${item._id}`)
+                          .then(() => fetchNotices())
+                          .catch((err) => console.error("Delete failed:", err));
+                      }
+                    }}
+                    style={st.deleteBtn}
+                    title="Delete notice"
+                  >
+                    {/* BUG FIX: FaTrash was used but not imported in original */}
+                    <FaTrash />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STUDENT MODE  (BatchDashboard)
+  // ═══════════════════════════════════════════════════════════════════════════
+  return (
+    <div>
+      {approvedNotices.length === 0 ? (
+        <p
+          style={{
+            color: "var(--text-dim, #64748b)",
+            textAlign: "center",
+            marginTop: "1rem",
+          }}
+        >
+          No new notices.
+        </p>
+      ) : (
+        <div className="table-container">
+          <table className="custom-table">
+            <thead>
+              <tr>
+                <th style={{ width: "50px", textAlign: "center" }}>No</th>
+                <th>Title</th>
+                <th style={{ width: "80px", textAlign: "center" }}>Files</th>
+                <th style={{ width: "120px" }}>Date</th>
+                <th style={{ width: "100px", textAlign: "center" }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {approvedNotices.map((ann, index) => (
+                <tr key={ann._id} style={{ cursor: "pointer" }} onClick={() => openNotice(ann)}>
+                  <td style={{ textAlign: "center" }}>{index + 1}</td>
+                  <td
+                    style={{
+                      fontWeight: "500",
+                      color: "var(--text-main)",
+                    }}
+                  >
+                    <FaBullhorn
+                      style={{ marginRight: "0.5rem", color: "#f97316" }}
+                    />
+                    {ann.title}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {ann.file_url ? (
+                      // BUG FIX: original BatchDashboard had no stopPropagation on
+                      // file links, so clicking the icon also triggered openNotice.
+                      <a
+                        href={ann.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="file-icon"
+                        title="Download File"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <FileIcon url={ann.file_url} />
+                        <span>{fileLabel(ann.file_url)}</span>
+                      </a>
+                    ) : (
+                      <span style={{ color: "#cbd5e1" }}>-</span>
+                    )}
+                  </td>
+                  <td>{new Date(ann.created_at).toLocaleDateString()}</td>
+                  <td
+                    style={{
+                      padding: "1.1rem 1.5rem",
+                      textAlign: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        background: "#eff6ff",
+                        color: "#2563eb",
+                        padding: "0.3rem 0.9rem",
+                        borderRadius: "20px",
+                        fontSize: "0.82rem",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      View
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Notice;
+
+// End of file
+
+// Start of: ./client\src\components\NoticeDetail.jsx
+import React from 'react'
+
+const NoticeDetail = ({ selectedNotice, closeNotice }) => {
+  return (
+    <div>
+      <div
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: "rgba(15, 23, 42, 0.7)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 1000,
+                  padding: "20px",
+                }}
+                onClick={closeNotice}
+              >
+                <div
+                  style={{
+                    background: "white",
+                    borderRadius: "16px",
+                    width: "100%",
+                    maxWidth: "680px",
+                    maxHeight: "92vh",
+                    overflow: "hidden",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div
+                    style={{
+                      padding: "1.5rem 2rem",
+                      borderBottom: "1px solid #e2e8f0",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: "1.35rem",
+                        fontWeight: "700",
+                        color: "#1e293b",
+                      }}
+                    >
+                      {selectedNotice.title}
+                    </h2>
+                    <button
+                      onClick={closeNotice}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        fontSize: "1.75rem",
+                        color: "#64748b",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+      
+                  {/* Body */}
+                  <div
+                    style={{
+                      padding: "2rem",
+                      overflowY: "auto",
+                      maxHeight: "calc(92vh - 180px)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "1.5rem",
+                        marginBottom: "2rem",
+                        color: "#64748b",
+                        fontSize: "0.92rem",
+                      }}
+                    >
+                      <div>
+                        By: <strong>{selectedNotice.author?.name || "Admin"}</strong>
+                      </div>
+                      <div>
+                        {new Date(selectedNotice.created_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          },
+                        )}
+                      </div>
+                    </div>
+      
+                    <div
+                      style={{
+                        fontSize: "1.02rem",
+                        lineHeight: "1.85",
+                        color: "#334155",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {selectedNotice.content ||
+                        "No additional content provided for this notice."}
+                    </div>
+      
+                    {/* File Section */}
+                    {selectedNotice.file_url && (
+                      <div
+                        style={{
+                          marginTop: "2.5rem",
+                          padding: "1.75rem",
+                          background: "#f8fafc",
+                          borderRadius: "12px",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            marginBottom: "1rem",
+                          }}
+                        >
+                          <FaFilePdf color="#ef4444" size={26} />
+                          <div>
+                            <p style={{ margin: 0, fontWeight: "600" }}>
+                              Attached PDF File
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href={selectedNotice.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            background: "#2563eb",
+                            color: "white",
+                            padding: "0.8rem 1.6rem",
+                            borderRadius: "8px",
+                            textDecoration: "none",
+                            fontWeight: "600",
+                          }}
+                        >
+                          View / Download File
+                        </a>
+                      </div>
+                    )}
+                  </div>
+      
+                  {/* Footer */}
+                  <div
+                    style={{
+                      padding: "1.25rem 2rem",
+                      borderTop: "1px solid #e2e8f0",
+                      textAlign: "right",
+                      background: "#f8fafc",
+                    }}
+                  >
+                    <button
+                      onClick={closeNotice}
+                      style={{
+                        padding: "0.7rem 2rem",
+                        background: "#64748b",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+    </div>
+  )
+}
+
+export default NoticeDetail
+
+// End of file
+
 // Start of: ./client\src\components\UI.jsx
 import React from 'react';
 import { FaExclamationCircle, FaTimes, FaCheckCircle } from 'react-icons/fa';
@@ -619,378 +1897,847 @@ export const AuthProvider = ({ children }) => {
 // End of file
 
 // Start of: ./client\src\pages\BatchDashboard.jsx
-import React, { useState, useEffect, useContext } from 'react';
-import axios from '../utils/axiosConfig';
-import { AuthContext } from '../context/AuthContext';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { FaFolder, FaPaperPlane, FaBell, FaBullhorn, FaFilePdf, FaImage, FaUser } from 'react-icons/fa';
+import React, { useState, useEffect, useContext } from "react";
+import axios from "../utils/axiosConfig";
+import { AuthContext } from "../context/AuthContext";
+import { Link, useSearchParams } from "react-router-dom";
+import Notice from "../components/Notice";
+import {
+  FaFolder,
+  FaPaperPlane,
+  FaBell,
+  FaBullhorn,
+  FaFilePdf,
+  FaImage,
+  FaUser,
+} from "react-icons/fa";
 
-import { Layout } from '../components/Layout';
-import { ConfirmModal } from '../components/UI';
+import { Layout } from "../components/Layout";
+import { ConfirmModal } from "../components/UI";
+import NoticeDetail from "../components/NoticeDetail";
 
 const BatchDashboard = () => {
-    const { user } = useContext(AuthContext);
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-    const activeTab = searchParams.get('tab') || 'folders'; // folders(default), notices, feedback
+  const { user } = useContext(AuthContext);
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "folders"; // folders(default), notices, feedback
 
-    const [teachers, setTeachers] = useState([]);
-    const [announcements, setAnnouncements] = useState([]);
-    const [feedbackMsg, setFeedbackMsg] = useState('');
-    const [isAnonymous, setIsAnonymous] = useState(false);
-    const [myFeedback, setMyFeedback] = useState([]);
-    const [sentMsg, setSentMsg] = useState('');
+  const [teachers, setTeachers] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [feedbackMsg, setFeedbackMsg] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [myFeedback, setMyFeedback] = useState([]);
+  const [sentMsg, setSentMsg] = useState("");
 
-    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDanger: false });
-    const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    isDanger: false,
+  });
+  const closeConfirmModal = () =>
+    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const teachersRes = await axios.get(`/documents/batch/${user.id}/teachers`);
-                setTeachers(teachersRes.data);
+  const [selectedNotice, setSelectedNotice] = useState(null);
 
-                const annRes = await axios.get('/announcements');
-                setAnnouncements(annRes.data);
+  const openNotice = (notice) => {
+    setSelectedNotice(notice);
+  };
 
-                const feedRes = await axios.get('/feedback');
-                setMyFeedback(feedRes.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        fetchData();
-    }, [user.id]);
+  const closeNotice = () => {
+    setSelectedNotice(null);
+  };
 
-    const sendFeedback = async (e) => {
-        e.preventDefault();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const teachersRes = await axios.get(
+          `/documents/batch/${user.id}/teachers`,
+        );
+        setTeachers(teachersRes.data);
+
+        const annRes = await axios.get("/announcements");
+        setAnnouncements(annRes.data);
+
+        const feedRes = await axios.get("/feedback");
+        setMyFeedback(feedRes.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, [user.id]);
+
+  const sendFeedback = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post("/feedback", {
+        message_content: feedbackMsg,
+        is_anonymous: isAnonymous,
+      });
+      setSentMsg("Feedback Sent to Head Authority!");
+      setFeedbackMsg("");
+      setIsAnonymous(false);
+
+      // Refresh feedback list
+      const feedRes = await axios.get("/feedback");
+      setMyFeedback(feedRes.data);
+
+      setTimeout(() => setSentMsg(""), 3000);
+    } catch (err) {
+      setSentMsg("Failed to send");
+    }
+  };
+
+  const deleteFeedback = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Feedback?",
+      message: "Are you sure you want to delete this feedback message?",
+      isDanger: true,
+      onConfirm: async () => {
         try {
-            await axios.post('/feedback', {
-                message_content: feedbackMsg,
-                is_anonymous: isAnonymous
-            });
-            setSentMsg('Feedback Sent to Head Authority!');
-            setFeedbackMsg('');
-            setIsAnonymous(false);
-
-            // Refresh feedback list
-            const feedRes = await axios.get('/feedback');
-            setMyFeedback(feedRes.data);
-
-            setTimeout(() => setSentMsg(''), 3000);
+          await axios.delete(`/feedback/${id}`);
+          const feedRes = await axios.get("/feedback");
+          setMyFeedback(feedRes.data);
         } catch (err) {
-            setSentMsg('Failed to send');
+          console.error(err);
+        } finally {
+          closeConfirmModal();
         }
-    };
+      },
+    });
+  };
 
-    const deleteFeedback = (id) => {
-        setConfirmModal({
-            isOpen: true,
-            title: 'Delete Feedback?',
-            message: 'Are you sure you want to delete this feedback message?',
-            isDanger: true,
-            onConfirm: async () => {
-                try {
-                    await axios.delete(`/feedback/${id}`);
-                    const feedRes = await axios.get('/feedback');
-                    setMyFeedback(feedRes.data);
-                } catch (err) {
-                    console.error(err);
-                } finally {
-                    closeConfirmModal();
-                }
-            }
-        });
-    };
-
-    return (
-        <Layout>
-            <div className="container" style={{ maxWidth: '1000px', padding: '2rem 1rem' }}>
-                <ConfirmModal
-                    isOpen={confirmModal.isOpen}
-                    onClose={closeConfirmModal}
-                    onConfirm={confirmModal.onConfirm}
-                    title={confirmModal.title}
-                    message={confirmModal.message}
-                    isDanger={confirmModal.isDanger}
-                />
-                <div className="glass-panel fade-in" style={{ minHeight: '400px' }}>
-
-                    {activeTab === 'profile' && (
-                        <div style={{ background: 'white', padding: '2rem', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', border: '1px solid #e2e8f0', maxWidth: '800px', margin: '0 auto' }}>
-                            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                                <div style={{ width: '80px', height: '80px', background: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto', color: '#2563eb' }}>
-                                    <FaUser size={32} />
-                                </div>
-                                <h2 style={{ fontSize: '1.8rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>{user.name}</h2>
-                                <span className="badge badge-primary" style={{ padding: '0.4rem 1rem', fontSize: '1rem' }}>Batch Profile</span>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #eee', textAlign: 'center' }}>
-                                    <label style={{ color: 'var(--text-dim)', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Batch Name</label>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--text-main)' }}>{user.name}</div>
-                                </div>
-                                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #eee', textAlign: 'center' }}>
-                                    <label style={{ color: 'var(--text-dim)', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Account Type</label>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--text-main)' }}>Student Access</div>
-                                </div>
-                            </div>
-
-                            <div style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.9rem' }}>
-                                To update batch details, please contact the Chairman.
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'notices' && (
-                        <div>
-                            {announcements.filter(a => a.type === 'NOTICE' || a.type === 'ANNOUNCEMENT').length === 0 ? <p style={{ color: 'var(--text-dim)', textAlign: 'center', marginTop: '1rem' }}>No new notices.</p> :
-                                <div className="table-container">
-                                    <table className="custom-table">
-                                        <thead>
-                                            <tr>
-                                                <th style={{ width: '50px', textAlign: 'center' }}>No</th>
-                                                <th>Title</th>
-                                                <th style={{ width: '80px', textAlign: 'center' }}>Files</th>
-                                                <th style={{ width: '120px' }}>Date</th>
-                                                <th style={{ width: '100px', textAlign: 'center' }}>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {announcements.filter(a => a.type === 'NOTICE' || a.type === 'ANNOUNCEMENT').map((ann, index) => {
-                                                const isPdf = ann.file_url && ann.file_url.toLowerCase().endsWith('.pdf');
-                                                const isImage = ann.file_url && (ann.file_url.match(/\.(jpeg|jpg|gif|png)$/) != null);
-
-                                                return (
-                                                    <tr key={ann._id}>
-                                                        <td style={{ textAlign: 'center' }}>{index + 1}</td>
-                                                        <td style={{ fontWeight: '500', color: 'var(--text-main)' }}>
-                                                            <FaBullhorn style={{ marginRight: '0.5rem', color: '#f97316' }} />
-                                                            {ann.title}
-                                                        </td>
-                                                        <td style={{ textAlign: 'center' }}>
-                                                            {ann.file_url ? (
-                                                                <a href={ann.file_url} target="_blank" rel="noopener noreferrer" className="file-icon" title="Download File">
-                                                                    {isPdf ? <FaFilePdf size={20} /> : isImage ? <FaImage size={20} color="#3b82f6" /> : <FaFolder size={20} color="#64748b" />}
-                                                                    <span>{isPdf ? 'PDF' : isImage ? 'IMG' : 'FILE'}</span>
-                                                                </a>
-                                                            ) : (
-                                                                <span style={{ color: '#cbd5e1' }}>-</span>
-                                                            )}
-                                                        </td>
-                                                        <td>{new Date(ann.created_at).toLocaleDateString()}</td>
-                                                        <td style={{ textAlign: 'center' }}>
-                                                            {ann.file_url ? (
-                                                                <a href={ann.file_url} target="_blank" rel="noopener noreferrer" className="action-link">
-                                                                    View
-                                                                </a>
-                                                            ) : (
-                                                                <span style={{ color: '#cbd5e1' }}>-</span>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            }
-                        </div>
-                    )}
-
-                    {activeTab === 'routine' && (
-                        <div>
-                            <h3 style={{ fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem', fontWeight: '600' }}>Class Routines</h3>
-                            {announcements.filter(a => a.type === 'ROUTINE').length === 0 ? <p style={{ color: 'var(--text-dim)', textAlign: 'center' }}>No routines published yet.</p> :
-                                <div style={{ display: 'grid', gap: '1.5rem' }}>
-                                    {announcements.filter(a => a.type === 'ROUTINE').map(routine => (
-                                        <div key={routine._id} style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                                                <div>
-                                                    <h4 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem' }}>{routine.title}</h4>
-                                                    <p style={{ color: '#475569', marginBottom: '1rem' }}>{routine.content}</p>
-                                                    <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-                                                        Posted on: {new Date(routine.created_at).toLocaleDateString()}
-                                                    </div>
-                                                </div>
-                                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                    {routine.file_url && (
-                                                        <a href={routine.file_url} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <FaFilePdf /> View Routine
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            }
-                        </div>
-                    )}
-
-                    {activeTab === 'folders' && (
-                        <div>
-                            <p style={{ color: 'var(--text-dim)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                                Browse resources by Teacher. Folders appear only when content is uploaded.
-                            </p>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
-                                {teachers.length === 0 ? <p style={{ color: 'var(--text-dim)' }}>No resources found yet.</p> :
-                                    teachers.map(teacher => (
-                                        <Link key={teacher._id} to={`/batch/teacher/${teacher._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                            <div className="interactive-card" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', border: '1px solid #e2e8f0' }}>
-                                                <div style={{ background: '#fef3c7', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
-                                                    <FaFolder size={28} color="#d97706" />
-                                                </div>
-                                                <div style={{ fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-main)' }}>{teacher.full_name}</div>
-                                            </div>
-                                        </Link>
-                                    ))
-                                }
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'feedback' && (
-                        <div style={{ maxWidth: '700px', margin: '0 auto', width: '100%' }}>
-                            <div className="feedback-card" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-soft)', border: '1px solid var(--glass-border)' }}>
-                                <h3 style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '1.5rem', color: 'var(--text-main)' }}>Contact Head Authority</h3>
-
-                                {sentMsg && (
-                                    <div style={{ background: sentMsg.includes('Failed') ? '#fef2f2' : '#f0fdf4', color: sentMsg.includes('Failed') ? 'var(--error)' : 'var(--success)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', textAlign: 'center', fontWeight: '500' }}>
-                                        {sentMsg}
-                                    </div>
-                                )}
-
-                                <form onSubmit={sendFeedback}>
-
-                                    <div style={{ marginBottom: '1.5rem' }}>
-                                        <textarea
-                                            rows="6"
-                                            placeholder="Write your message here... (e.g., Request for materials, Class scheduling issue)"
-                                            value={feedbackMsg}
-                                            onChange={e => setFeedbackMsg(e.target.value)}
-                                            required
-                                            style={{
-                                                width: '100%',
-                                                padding: '1rem',
-                                                borderRadius: 'var(--radius-md)',
-                                                border: '1px solid #cbd5e1',
-                                                resize: 'vertical',
-                                                minHeight: '150px',
-                                                fontSize: '1rem',
-                                                fontFamily: 'inherit',
-                                                outline: 'none',
-                                                transition: 'all 0.2s',
-                                                background: 'var(--bg-main)',
-                                                color: 'var(--text-main)'
-                                            }}
-                                            onFocus={(e) => {
-                                                e.target.style.borderColor = 'var(--primary)';
-                                                e.target.style.boxShadow = '0 0 0 3px var(--primary-fade)';
-                                                e.target.style.background = 'white';
-                                            }}
-                                            onBlur={(e) => {
-                                                e.target.style.borderColor = '#cbd5e1';
-                                                e.target.style.boxShadow = 'none';
-                                                e.target.style.background = '#f8fafc';
-                                            }}
-                                        ></textarea>
-                                    </div>
-
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => setIsAnonymous(!isAnonymous)}>
-                                            <div style={{
-                                                width: '20px',
-                                                height: '20px',
-                                                borderRadius: '4px',
-                                                border: `2px solid ${isAnonymous ? 'var(--primary)' : '#cbd5e1'}`,
-                                                background: isAnonymous ? 'var(--primary)' : 'white',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                transition: 'all 0.2s'
-                                            }}>
-                                                {isAnonymous && <FaPaperPlane size={10} color="white" style={{ transform: 'rotate(0deg)' }} />}
-                                                {/* Using PaperPlane icon specifically or Check/Tick */}
-                                            </div>
-                                            <span style={{ fontSize: '0.95rem', fontWeight: '500', color: 'var(--text-main)', userSelect: 'none' }}>Send Anonymously</span>
-                                        </div>
-
-                                        {/* You can add a character count or other info here if needed */}
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="btn-primary"
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '0.75rem',
-                                            width: '100%',
-                                            fontSize: '1.1rem',
-                                            padding: '1rem'
-                                        }}
-                                    >
-                                        <FaPaperPlane /> Send Feedback
-                                    </button>
-                                </form>
-                            </div>
-
-                            <div style={{ marginTop: '3rem' }}>
-                                <h4 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--text-dim)', fontSize: '1.1rem', fontWeight: '600' }}>Previous Feedback History</h4>
-
-                                {myFeedback.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.5)', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
-                                        <FaPaperPlane size={32} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                                        <p>No feedback sent yet.</p>
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                        {myFeedback.map(f => (
-                                            <div key={f._id} className="history-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'transform 0.2s' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)', fontWeight: '500' }}>
-                                                            {new Date(f.sent_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                        </span>
-                                                        {f.is_anonymous && (
-                                                            <span style={{ fontSize: '0.75rem', background: '#f1f5f9', color: 'var(--text-dim)', padding: '2px 8px', borderRadius: '4px', width: 'fit-content' }}>
-                                                                Anonymous
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <button
-                                                        onClick={() => deleteFeedback(f._id)}
-                                                        style={{
-                                                            background: '#fef2f2',
-                                                            border: 'none',
-                                                            color: '#ef4444',
-                                                            cursor: 'pointer',
-                                                            padding: '0.4rem 0.8rem',
-                                                            borderRadius: '6px',
-                                                            fontSize: '0.8rem',
-                                                            fontWeight: '600',
-                                                            transition: 'background 0.2s'
-                                                        }}
-                                                        onMouseEnter={(e) => e.target.style.background = '#fee2e2'}
-                                                        onMouseLeave={(e) => e.target.style.background = '#fef2f2'}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                                <p style={{ margin: 0, color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{f.message_content}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+  return (
+    <Layout>
+      <div
+        className="container"
+        style={{ maxWidth: "1000px", padding: "2rem 1rem" }}
+      >
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={closeConfirmModal}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          isDanger={confirmModal.isDanger}
+        />
+        <div className="glass-panel fade-in" style={{ minHeight: "400px" }}>
+          {activeTab === "profile" && (
+            <div
+              style={{
+                background: "white",
+                padding: "2rem",
+                borderRadius: "20px",
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                border: "1px solid #e2e8f0",
+                maxWidth: "800px",
+                margin: "0 auto",
+              }}
+            >
+              <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+                <div
+                  style={{
+                    width: "80px",
+                    height: "80px",
+                    background: "#eff6ff",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 1rem auto",
+                    color: "#2563eb",
+                  }}
+                >
+                  <FaUser size={32} />
                 </div>
+                <h2
+                  style={{
+                    fontSize: "1.8rem",
+                    color: "var(--text-main)",
+                    marginBottom: "0.25rem",
+                  }}
+                >
+                  {user.name}
+                </h2>
+                <span
+                  className="badge badge-primary"
+                  style={{ padding: "0.4rem 1rem", fontSize: "1rem" }}
+                >
+                  Batch Profile
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                  gap: "1.5rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    padding: "1.5rem",
+                    borderRadius: "12px",
+                    border: "1px solid #eee",
+                    textAlign: "center",
+                  }}
+                >
+                  <label
+                    style={{
+                      color: "var(--text-dim)",
+                      fontSize: "0.85rem",
+                      textTransform: "uppercase",
+                      marginBottom: "0.5rem",
+                      display: "block",
+                    }}
+                  >
+                    Batch Name
+                  </label>
+                  <div
+                    style={{
+                      fontSize: "1.2rem",
+                      fontWeight: "600",
+                      color: "var(--text-main)",
+                    }}
+                  >
+                    {user.name}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    padding: "1.5rem",
+                    borderRadius: "12px",
+                    border: "1px solid #eee",
+                    textAlign: "center",
+                  }}
+                >
+                  <label
+                    style={{
+                      color: "var(--text-dim)",
+                      fontSize: "0.85rem",
+                      textTransform: "uppercase",
+                      marginBottom: "0.5rem",
+                      display: "block",
+                    }}
+                  >
+                    Account Type
+                  </label>
+                  <div
+                    style={{
+                      fontSize: "1.2rem",
+                      fontWeight: "600",
+                      color: "var(--text-main)",
+                    }}
+                  >
+                    Student Access
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  textAlign: "center",
+                  color: "var(--text-dim)",
+                  fontSize: "0.9rem",
+                }}
+              >
+                To update batch details, please contact the Chairman.
+              </div>
             </div>
-        </Layout>
-    );
+          )}
+
+          {activeTab === "folders" && (
+            <div>
+              <p
+                style={{
+                  color: "var(--text-dim)",
+                  marginBottom: "1.5rem",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Browse resources by Teacher. Folders appear only when content is
+                uploaded.
+              </p>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+                  gap: "1rem",
+                }}
+              >
+                {teachers.length === 0 ? (
+                  <p style={{ color: "var(--text-dim)" }}>
+                    No resources found yet.
+                  </p>
+                ) : (
+                  teachers.map((teacher) => (
+                    <Link
+                      key={teacher._id}
+                      to={`/batch/teacher/${teacher._id}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <div
+                        className="interactive-card"
+                        style={{
+                          background: "#f8fafc",
+                          padding: "1.5rem",
+                          borderRadius: "16px",
+                          textAlign: "center",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: "#fef3c7",
+                            width: "60px",
+                            height: "60px",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 1rem auto",
+                          }}
+                        >
+                          <FaFolder size={28} color="#d97706" />
+                        </div>
+                        <div
+                          style={{
+                            fontWeight: "600",
+                            fontSize: "0.95rem",
+                            color: "var(--text-main)",
+                          }}
+                        >
+                          {teacher.full_name}
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === "notices" && (
+            <Notice
+              mode="student"
+              notices={announcements}
+              openNotice={openNotice}
+            />
+          )}
+          {activeTab === "updates" && (
+            <div>
+              <h3
+                style={{
+                  fontSize: "1.2rem",
+                  color: "var(--text-main)",
+                  marginBottom: "1.5rem",
+                  fontWeight: "600",
+                }}
+              >
+                Class Updates
+              </h3>
+              {announcements.filter((a) => a.type === "ANNOUNCEMENT").length ===
+              0 ? (
+                <p style={{ color: "var(--text-dim)", textAlign: "center" }}>
+                  No class updates published yet.
+                </p>
+              ) : (
+                <div style={{ display: "grid", gap: "1.5rem" }}>
+                  {announcements
+                    .filter((a) => a.type === "ANNOUNCEMENT")
+                    .map((update) => (
+                      <div
+                        key={update._id}
+                        style={{
+                          background: "white",
+                          padding: "1.5rem",
+                          borderRadius: "12px",
+                          border: "1px solid #e2e8f0",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            flexWrap: "wrap",
+                            gap: "1rem",
+                          }}
+                        >
+                          <div>
+                            <h4
+                              style={{
+                                fontSize: "1.1rem",
+                                fontWeight: "700",
+                                color: "#1e293b",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              {update.title}
+                            </h4>
+                            <p
+                              style={{ color: "#475569", marginBottom: "1rem" }}
+                            >
+                              {update.content}
+                            </p>
+                            <div
+                              style={{ fontSize: "0.85rem", color: "#94a3b8" }}
+                            >
+                              Posted on:{" "}
+                              {new Date(
+                                update.created_at,
+                              ).toLocaleDateString()}
+                            </div>
+                            {update.author && update.author.full_name && (
+                              <div
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#64748b",
+                                  marginTop: "0.25rem",
+                                }}
+                              >
+                                By {update.author.full_name}
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "1rem",
+                              alignItems: "center",
+                            }}
+                          >
+                            {update.file_url && (
+                              <a
+                                href={update.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary"
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "0.5rem",
+                                }}
+                              >
+                                <FaFilePdf /> View Attachment
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+          {activeTab === "routine" && (
+            <div>
+              <h3
+                style={{
+                  fontSize: "1.2rem",
+                  color: "var(--text-main)",
+                  marginBottom: "1.5rem",
+                  fontWeight: "600",
+                }}
+              >
+                Class Routines
+              </h3>
+              {announcements.filter((a) => a.type === "ROUTINE").length ===
+              0 ? (
+                <p style={{ color: "var(--text-dim)", textAlign: "center" }}>
+                  No routines published yet.
+                </p>
+              ) : (
+                <div style={{ display: "grid", gap: "1.5rem" }}>
+                  {announcements
+                    .filter((a) => a.type === "ROUTINE")
+                    .map((routine) => (
+                      <div
+                        key={routine._id}
+                        style={{
+                          background: "white",
+                          padding: "1.5rem",
+                          borderRadius: "12px",
+                          border: "1px solid #e2e8f0",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            flexWrap: "wrap",
+                            gap: "1rem",
+                          }}
+                        >
+                          <div>
+                            <h4
+                              style={{
+                                fontSize: "1.1rem",
+                                fontWeight: "700",
+                                color: "#1e293b",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              {routine.title}
+                            </h4>
+                            <p
+                              style={{ color: "#475569", marginBottom: "1rem" }}
+                            >
+                              {routine.content}
+                            </p>
+                            <div
+                              style={{ fontSize: "0.85rem", color: "#94a3b8" }}
+                            >
+                              Posted on:{" "}
+                              {new Date(
+                                routine.created_at,
+                              ).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "1rem",
+                              alignItems: "center",
+                            }}
+                          >
+                            {routine.file_url && (
+                              <a
+                                href={routine.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary"
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "0.5rem",
+                                }}
+                              >
+                                <FaFilePdf /> View Routine
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "feedback" && (
+            <div style={{ maxWidth: "700px", margin: "0 auto", width: "100%" }}>
+              <div
+                className="feedback-card"
+                style={{
+                  background: "var(--bg-card)",
+                  padding: "2rem",
+                  borderRadius: "var(--radius-lg)",
+                  boxShadow: "var(--shadow-soft)",
+                  border: "1px solid var(--glass-border)",
+                }}
+              >
+                <h3
+                  style={{
+                    textAlign: "center",
+                    marginBottom: "2rem",
+                    fontSize: "1.5rem",
+                    color: "var(--text-main)",
+                  }}
+                >
+                  Contact Head Authority
+                </h3>
+
+                {sentMsg && (
+                  <div
+                    style={{
+                      background: sentMsg.includes("Failed")
+                        ? "#fef2f2"
+                        : "#f0fdf4",
+                      color: sentMsg.includes("Failed")
+                        ? "var(--error)"
+                        : "var(--success)",
+                      padding: "1rem",
+                      borderRadius: "var(--radius-md)",
+                      marginBottom: "1.5rem",
+                      textAlign: "center",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {sentMsg}
+                  </div>
+                )}
+
+                <form onSubmit={sendFeedback}>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <textarea
+                      rows="6"
+                      placeholder="Write your message here... (e.g., Request for materials, Class scheduling issue)"
+                      value={feedbackMsg}
+                      onChange={(e) => setFeedbackMsg(e.target.value)}
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "1rem",
+                        borderRadius: "var(--radius-md)",
+                        border: "1px solid #cbd5e1",
+                        resize: "vertical",
+                        minHeight: "150px",
+                        fontSize: "1rem",
+                        fontFamily: "inherit",
+                        outline: "none",
+                        transition: "all 0.2s",
+                        background: "var(--bg-main)",
+                        color: "var(--text-main)",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "var(--primary)";
+                        e.target.style.boxShadow =
+                          "0 0 0 3px var(--primary-fade)";
+                        e.target.style.background = "white";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "#cbd5e1";
+                        e.target.style.boxShadow = "none";
+                        e.target.style.background = "#f8fafc";
+                      }}
+                    ></textarea>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: "1.5rem",
+                      flexWrap: "wrap",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setIsAnonymous(!isAnonymous)}
+                    >
+                      <div
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "4px",
+                          border: `2px solid ${isAnonymous ? "var(--primary)" : "#cbd5e1"}`,
+                          background: isAnonymous ? "var(--primary)" : "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {isAnonymous && (
+                          <FaPaperPlane
+                            size={10}
+                            color="white"
+                            style={{ transform: "rotate(0deg)" }}
+                          />
+                        )}
+                        {/* Using PaperPlane icon specifically or Check/Tick */}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "0.95rem",
+                          fontWeight: "500",
+                          color: "var(--text-main)",
+                          userSelect: "none",
+                        }}
+                      >
+                        Send Anonymously
+                      </span>
+                    </div>
+
+                    {/* You can add a character count or other info here if needed */}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.75rem",
+                      width: "100%",
+                      fontSize: "1.1rem",
+                      padding: "1rem",
+                    }}
+                  >
+                    <FaPaperPlane /> Send Feedback
+                  </button>
+                </form>
+              </div>
+
+              <div style={{ marginTop: "3rem" }}>
+                <h4
+                  style={{
+                    textAlign: "center",
+                    marginBottom: "1.5rem",
+                    color: "var(--text-dim)",
+                    fontSize: "1.1rem",
+                    fontWeight: "600",
+                  }}
+                >
+                  Previous Feedback History
+                </h4>
+
+                {myFeedback.length === 0 ? (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "3rem",
+                      color: "var(--text-dim)",
+                      background: "rgba(255,255,255,0.5)",
+                      borderRadius: "16px",
+                      border: "1px dashed #cbd5e1",
+                    }}
+                  >
+                    <FaPaperPlane
+                      size={32}
+                      style={{ opacity: 0.2, marginBottom: "1rem" }}
+                    />
+                    <p>No feedback sent yet.</p>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                    }}
+                  >
+                    {myFeedback.map((f) => (
+                      <div
+                        key={f._id}
+                        className="history-card"
+                        style={{
+                          background: "white",
+                          padding: "1.5rem",
+                          borderRadius: "12px",
+                          border: "1px solid #e2e8f0",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                          transition: "transform 0.2s",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "1rem",
+                            borderBottom: "1px solid #f1f5f9",
+                            paddingBottom: "0.75rem",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.25rem",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "var(--text-dim)",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {new Date(f.sent_at).toLocaleDateString(
+                                undefined,
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
+                            </span>
+                            {f.is_anonymous && (
+                              <span
+                                style={{
+                                  fontSize: "0.75rem",
+                                  background: "#f1f5f9",
+                                  color: "var(--text-dim)",
+                                  padding: "2px 8px",
+                                  borderRadius: "4px",
+                                  width: "fit-content",
+                                }}
+                              >
+                                Anonymous
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => deleteFeedback(f._id)}
+                            style={{
+                              background: "#fef2f2",
+                              border: "none",
+                              color: "#ef4444",
+                              cursor: "pointer",
+                              padding: "0.4rem 0.8rem",
+                              borderRadius: "6px",
+                              fontSize: "0.8rem",
+                              fontWeight: "600",
+                              transition: "background 0.2s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.target.style.background = "#fee2e2")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.target.style.background = "#fef2f2")
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                        <p
+                          style={{
+                            margin: 0,
+                            color: "var(--text-main)",
+                            lineHeight: "1.6",
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
+                          {f.message_content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        {selectedNotice && (
+          <NoticeDetail
+            selectedNotice={selectedNotice}
+            closeNotice={closeNotice}
+          />
+        )}
+      </div>
+    </Layout>
+  );
 };
 
 export default BatchDashboard;
@@ -1121,96 +2868,145 @@ export default BatchFiles;
 // End of file
 
 // Start of: ./client\src\pages\BatchLogin.jsx
-import React, { useState, useContext } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from "react";
+import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-import { Loader, Toast } from '../components/UI';
+import { Loader, Toast } from "../components/UI";
 
 const BatchLogin = () => {
-    const [formData, setFormData] = useState({ username: '', password: '' });
-    const [showPassword, setShowPassword] = useState(false);
-    const { loginBatch, user } = useContext(AuthContext);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const { loginBatch, user } = useContext(AuthContext);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+ 
+  React.useEffect(() => {
+    if (user) {
+      navigate("/batch");
+    }
+  }, [user, navigate]);
 
-    React.useEffect(() => {
-        if (user) {
-            navigate('/batch');
-        }
-    }, [user, navigate]);
+  const onChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await loginBatch(formData.username, formData.password);
+      if (res.success) {
+        navigate("/batch");
+      } else {
+        setError(res.msg);
+      }
+    } catch (err) {
+      setError(
+        "Connection failed. Please check your internet or try again later.",
+      );
+      err.response && console.error("Batch Login Error:", err.response.data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const onSubmit = async e => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        try {
-            const res = await loginBatch(formData.username, formData.password);
-            if (res.success) {
-                navigate('/batch');
-            } else {
-                setError(res.msg);
-            }
-        } catch (err) {
-            setError('Connection failed. Please check your internet or try again later.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  return (
+    <div
+      className="container"
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+      }}
+    >
+      <div className="glass-panel" style={{ width: "100%", maxWidth: "400px" }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--text-dim)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            fontSize: "0.9rem",
+            padding: "0",
+            marginBottom: "1rem",
+          }}
+        >
+          <FaArrowLeft size={14} /> Back
+        </button>
+        <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+          Batch Login
+        </h2>
+        {error && <Toast message={error} onClose={() => setError("")} />}
 
-    return (
-        <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-            <div className="glass-panel" style={{ width: '100%', maxWidth: '400px' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Batch Login</h2>
-                {error && <Toast message={error} onClose={() => setError('')} />}
-
-                {loading ? <div style={{ textAlign: 'center', padding: '2rem' }}><Loader /><p style={{ marginTop: '1rem', color: 'var(--text-dim)' }}>Unlocking class resources...</p></div> :
-                    <form onSubmit={onSubmit}>
-                        <input type="text" placeholder="Batch Username (e.g. CSE-24)" name="username" value={formData.username} onChange={onChange} required />
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Batch Password"
-                                name="password"
-                                value={formData.password}
-                                onChange={onChange}
-                                required
-                                style={{ paddingRight: '40px' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '38%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    color: 'var(--text-dim)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '5px'
-                                }}
-                            >
-                                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                            </button>
-                        </div>
-
-                        <button type="submit" className="btn-primary" style={{ width: '100%' }}>
-                            Enter Class
-                        </button>
-                    </form>
-                }
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <Loader />
+            <p style={{ marginTop: "1rem", color: "var(--text-dim)" }}>
+              Unlocking class resources...
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit}>
+            <input
+              type="text"
+              placeholder="Batch Username (e.g. CSE-24)"
+              name="username"
+              value={formData.username}
+              onChange={onChange}
+              required
+            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Batch Password"
+                name="password"
+                value={formData.password}
+                onChange={onChange}
+                required
+                style={{ paddingRight: "40px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "38%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-dim)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "5px",
+                }}
+              >
+                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+              </button>
             </div>
-        </div>
-    );
+
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{ width: "100%" }}
+            >
+              Enter Class
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default BatchLogin;
@@ -1218,512 +3014,823 @@ export default BatchLogin;
 // End of file
 
 // Start of: ./client\src\pages\ChairmanDashboard.jsx
-import React, { useState, useEffect, useContext } from 'react';
-import axios from '../utils/axiosConfig';
-import { AuthContext } from '../context/AuthContext';
-import { Loader, Toast, ConfirmModal } from '../components/UI';
-import { Layout } from '../components/Layout';
-import { FaTrash, FaCheck, FaTimes, FaPaperclip, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from "react";
+import axios from "../utils/axiosConfig";
+import { AuthContext } from "../context/AuthContext";
+import { Loader, Toast, ConfirmModal } from "../components/UI";
+import { Layout } from "../components/Layout";
+import {
+  FaTrash,
+  FaCheck,
+  FaTimes,
+  FaPaperclip,
+  FaChevronDown,
+  FaChevronUp,
+} from "react-icons/fa";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const ChairmanDashboard = () => {
-    const { user, loadUser, loading: authLoading } = useContext(AuthContext);
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('notices');
+  const { user, loadUser, loading: authLoading } = useContext(AuthContext);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("notices");
 
-    // Data State
-    const [notices, setNotices] = useState([]);
-    const [routines, setRoutines] = useState([]);
-    const [feedback, setFeedback] = useState([]);
+  // Data State
+  const [notices, setNotices] = useState([]);
+  const [routines, setRoutines] = useState([]);
+  const [feedback, setFeedback] = useState([]);
 
-    // Derived state
-    const [pendingNotices, setPendingNotices] = useState([]);
-    const [publishedNotices, setPublishedNotices] = useState([]);
-    const [pendingRoutines, setPendingRoutines] = useState([]);
-    const [publishedRoutines, setPublishedRoutines] = useState([]);
+  // Derived state
+  const [pendingNotices, setPendingNotices] = useState([]);
+  const [publishedNotices, setPublishedNotices] = useState([]);
+  const [pendingRoutines, setPendingRoutines] = useState([]);
+  const [publishedRoutines, setPublishedRoutines] = useState([]);
 
-    // UI State
-    const [toast, setToast] = useState(null);
-    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDanger: false });
-    const [loading, setLoading] = useState(false);
-    const [expandedFeedback, setExpandedFeedback] = useState({});
-    const [expandedRoutineFeedback, setExpandedRoutineFeedback] = useState({});
+  // UI State
+  const [toast, setToast] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    isDanger: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [expandedFeedback, setExpandedFeedback] = useState({});
+  const [expandedRoutineFeedback, setExpandedRoutineFeedback] = useState({});
 
-    const showToast = (message, type = 'success') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3500);
-    };
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const tab = params.get('tab');
-        if (tab) setActiveTab(tab);
-        else navigate('?tab=notices', { replace: true });
-    }, [location.search, navigate]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab) setActiveTab(tab);
+    else navigate("?tab=notices", { replace: true });
+  }, [location.search, navigate]);
 
-    useEffect(() => {
-        if (activeTab === 'notices' || activeTab === 'routine') fetchContent();
-        if (activeTab === 'feedback') fetchFeedback();
-    }, [activeTab]);
+  useEffect(() => {
+    if (activeTab === "notices" || activeTab === "routine") fetchContent();
+    if (activeTab === "feedback") fetchFeedback();
+  }, [activeTab]);
 
-    const fetchContent = async () => {
+  const fetchContent = async () => {
+    try {
+      const res = await axios.get("/announcements");
+      const allItems = res.data;
+      const allNotices = allItems.filter((i) => i.type === "NOTICE");
+      setNotices(allNotices);
+      setPendingNotices(
+        allNotices.filter(
+          (n) => n.status === "PENDING" || n.status === "PENDING_APPROVAL",
+        ),
+      );
+      setPublishedNotices(
+        allNotices.filter((n) => n.status === "APPROVED" && !n.target_batch),
+      );
+      const allRoutines = allItems.filter((i) => i.type === "ROUTINE");
+      setRoutines(allRoutines);
+      setPendingRoutines(
+        allRoutines.filter(
+          (r) => r.status === "PENDING" || r.status === "PENDING_APPROVAL",
+        ),
+      );
+      setPublishedRoutines(allRoutines.filter((r) => r.status === "APPROVED"));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchFeedback = async () => {
+    try {
+      const res = await axios.get("/feedback");
+      setFeedback(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStatusUpdate = async (id, status, type, feedback = "") => {
+    try {
+      await axios.put(`/announcements/${id}/status`, { status, feedback });
+      showToast(
+        `${type} ${status === "APPROVED" ? "Published" : "Declined"}`,
+        "success",
+      );
+      fetchContent();
+    } catch (err) {
+      console.error(err);
+      showToast("Action failed", "error");
+    }
+  };
+
+  const deleteItem = (id, endpoint = "announcements") => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Item?",
+      message: "Are you sure you want to delete this item?",
+      isDanger: true,
+      onConfirm: async () => {
         try {
-            const res = await axios.get('/announcements');
-            const allItems = res.data;
-            const allNotices = allItems.filter(i => i.type === 'NOTICE');
-            setNotices(allNotices);
-            setPendingNotices(allNotices.filter(n => n.status === 'PENDING' || n.status === 'PENDING_APPROVAL'));
-            setPublishedNotices(allNotices.filter(n => n.status === 'APPROVED' && !n.target_batch));
-            const allRoutines = allItems.filter(i => i.type === 'ROUTINE');
-            setRoutines(allRoutines);
-            setPendingRoutines(allRoutines.filter(r => r.status === 'PENDING' || r.status === 'PENDING_APPROVAL'));
-            setPublishedRoutines(allRoutines.filter(r => r.status === 'APPROVED'));
+          await axios.delete(`/${endpoint}/${id}`);
+          showToast("Deleted successfully", "success");
+          if (endpoint === "announcements") fetchContent();
+          else fetchFeedback();
         } catch (err) {
-            console.error(err);
+          showToast("Delete failed", "error");
+        } finally {
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         }
-    };
+      },
+    });
+  };
 
-    const fetchFeedback = async () => {
-        try {
-            const res = await axios.get('/feedback');
-            setFeedback(res.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+  if (authLoading) return <Loader />;
+  if (!user || user.role !== "CHAIRMAN") return null;
 
-    const handleStatusUpdate = async (id, status, type, feedback = '') => {
-        try {
-            await axios.put(`/announcements/${id}/status`, { status, feedback });
-            showToast(`${type} ${status === 'APPROVED' ? 'Published' : 'Declined'}`, 'success');
-            fetchContent();
-        } catch (err) {
-            console.error(err);
-            showToast('Action failed', 'error');
-        }
-    };
+  /* ─── Shared Inline Styles ─── */
+  const styles = {
+    wrapper: {
+      maxWidth: "900px",
+      margin: "0 auto",
+      padding: "1rem 1rem 4rem",
+    },
+    outerCard: {
+      background: "#fff",
+      borderRadius: "18px",
+      border: "1px solid #ffe0cc",
+      padding: "2rem 2rem 2.5rem",
+      marginBottom: "2rem",
+    },
+    sectionTitle: {
+      fontFamily: "'Georgia', serif",
+      fontStyle: "italic",
+      fontSize: "1.35rem",
+      color: "#ea580c",
+      fontWeight: "600",
+      marginBottom: "1.5rem",
+    },
+    noticeCard: {
+      background: "#fff",
+      borderRadius: "14px",
+      border: "1px solid #f1f5f9",
+      padding: "1.25rem 1.5rem",
+      marginBottom: "1.25rem",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+    },
+    badge: (type) => ({
+      display: "inline-block",
+      fontSize: "0.7rem",
+      padding: "0.2rem 0.7rem",
+      borderRadius: "20px",
+      fontWeight: "600",
+      border: "1px solid",
+      background: type === "everyone" ? "#fff7ed" : "#f0fdf4",
+      color: type === "everyone" ? "#ea580c" : "#16a34a",
+      borderColor: type === "everyone" ? "#fed7aa" : "#bbf7d0",
+    }),
+    attachBtn: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      padding: "0.5rem 1.25rem",
+      background: "linear-gradient(135deg, #fef3c7 0%, #ffedd5 100%)",
+      color: "#b45309",
+      borderRadius: "8px",
+      textDecoration: "none",
+      fontSize: "0.85rem",
+      fontWeight: "600",
+      border: "1px solid #fcd34d",
+      marginTop: "0.75rem",
+    },
+    publishBtn: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "0.4rem",
+      padding: "0.45rem 1.2rem",
+      background: "#ea580c",
+      color: "#fff",
+      border: "none",
+      borderRadius: "8px",
+      fontWeight: "600",
+      fontSize: "0.85rem",
+      cursor: "pointer",
+    },
+    declineBtn: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "0.4rem",
+      padding: "0.45rem 1.2rem",
+      background: "#fff",
+      color: "#1e293b",
+      border: "1px solid #cbd5e1",
+      borderRadius: "8px",
+      fontWeight: "500",
+      fontSize: "0.85rem",
+      cursor: "pointer",
+    },
+    deleteBtn: {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "32px",
+      height: "32px",
+      background: "transparent",
+      color: "#ef4444",
+      border: "none",
+      borderRadius: "50%",
+      cursor: "pointer",
+      fontSize: "0.9rem",
+    },
+    readMoreBtn: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "0.4rem",
+      padding: "0.45rem 1.2rem",
+      background: "#ea580c",
+      color: "#fff",
+      border: "none",
+      borderRadius: "8px",
+      fontWeight: "600",
+      fontSize: "0.85rem",
+      cursor: "pointer",
+    },
+    feedbackToggleBtn: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      padding: "0.5rem 1.5rem",
+      background: "linear-gradient(135deg, #fef3c7 0%, #ffedd5 100%)",
+      color: "#b45309",
+      border: "1px solid #fcd34d",
+      borderRadius: "8px",
+      fontWeight: "600",
+      fontSize: "0.85rem",
+      cursor: "pointer",
+      margin: "0.75rem 0",
+    },
+    profileCard: {
+      background: "#f8fafc",
+      padding: "1.5rem",
+      borderRadius: "14px",
+      border: "1px solid #e2e8f0",
+    },
+    profileLabel: {
+      display: "block",
+      fontSize: "0.8rem",
+      color: "#94a3b8",
+      marginBottom: "0.4rem",
+      fontWeight: "500",
+    },
+    profileValue: {
+      fontWeight: "700",
+      color: "#1e293b",
+      fontSize: "1rem",
+    },
+    editProfileBtn: {
+      padding: "0.5rem 1.25rem",
+      background: "#fff",
+      color: "#1e293b",
+      border: "1px solid #cbd5e1",
+      borderRadius: "8px",
+      fontWeight: "500",
+      fontSize: "0.85rem",
+      cursor: "pointer",
+    },
+  };
 
-    const deleteItem = (id, endpoint = 'announcements') => {
-        setConfirmModal({
-            isOpen: true,
-            title: 'Delete Item?',
-            message: 'Are you sure you want to delete this item?',
-            isDanger: true,
-            onConfirm: async () => {
-                try {
-                    await axios.delete(`/${endpoint}/${id}`);
-                    showToast('Deleted successfully', 'success');
-                    if (endpoint === 'announcements') fetchContent();
-                    else fetchFeedback();
-                } catch (err) {
-                    showToast('Delete failed', 'error');
-                } finally {
-                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                }
-            }
-        });
-    };
+  return (
+    <Layout>
+      <div style={styles.wrapper}>
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          isDanger={confirmModal.isDanger}
+        />
 
-    if (authLoading) return <Loader />;
-    if (!user || user.role !== 'CHAIRMAN') return null;
-
-    /* ─── Shared Inline Styles ─── */
-    const styles = {
-        wrapper: {
-            maxWidth: '900px',
-            margin: '0 auto',
-            padding: '1rem 1rem 4rem',
-        },
-        outerCard: {
-            background: '#fff',
-            borderRadius: '18px',
-            border: '1px solid #ffe0cc',
-            padding: '2rem 2rem 2.5rem',
-            marginBottom: '2rem',
-        },
-        sectionTitle: {
-            fontFamily: "'Georgia', serif",
-            fontStyle: 'italic',
-            fontSize: '1.35rem',
-            color: '#ea580c',
-            fontWeight: '600',
-            marginBottom: '1.5rem',
-        },
-        noticeCard: {
-            background: '#fff',
-            borderRadius: '14px',
-            border: '1px solid #f1f5f9',
-            padding: '1.25rem 1.5rem',
-            marginBottom: '1.25rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        },
-        badge: (type) => ({
-            display: 'inline-block',
-            fontSize: '0.7rem',
-            padding: '0.2rem 0.7rem',
-            borderRadius: '20px',
-            fontWeight: '600',
-            border: '1px solid',
-            background: type === 'batch' ? '#fff7ed' : '#f0fdf4',
-            color: type === 'batch' ? '#ea580c' : '#16a34a',
-            borderColor: type === 'batch' ? '#fed7aa' : '#bbf7d0',
-        }),
-        attachBtn: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1.25rem',
-            background: 'linear-gradient(135deg, #fef3c7 0%, #ffedd5 100%)',
-            color: '#b45309',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontSize: '0.85rem',
-            fontWeight: '600',
-            border: '1px solid #fcd34d',
-            marginTop: '0.75rem',
-        },
-        publishBtn: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.45rem 1.2rem',
-            background: '#ea580c',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            fontWeight: '600',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-        },
-        declineBtn: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.45rem 1.2rem',
-            background: '#fff',
-            color: '#1e293b',
-            border: '1px solid #cbd5e1',
-            borderRadius: '8px',
-            fontWeight: '500',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-        },
-        deleteBtn: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            background: 'transparent',
-            color: '#ef4444',
-            border: 'none',
-            borderRadius: '50%',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-        },
-        readMoreBtn: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.45rem 1.2rem',
-            background: '#ea580c',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            fontWeight: '600',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-        },
-        feedbackToggleBtn: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1.5rem',
-            background: 'linear-gradient(135deg, #fef3c7 0%, #ffedd5 100%)',
-            color: '#b45309',
-            border: '1px solid #fcd34d',
-            borderRadius: '8px',
-            fontWeight: '600',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-            margin: '0.75rem 0',
-        },
-        profileCard: {
-            background: '#f8fafc',
-            padding: '1.5rem',
-            borderRadius: '14px',
-            border: '1px solid #e2e8f0',
-        },
-        profileLabel: {
-            display: 'block',
-            fontSize: '0.8rem',
-            color: '#94a3b8',
-            marginBottom: '0.4rem',
-            fontWeight: '500',
-        },
-        profileValue: {
-            fontWeight: '700',
-            color: '#1e293b',
-            fontSize: '1rem',
-        },
-        editProfileBtn: {
-            padding: '0.5rem 1.25rem',
-            background: '#fff',
-            color: '#1e293b',
-            border: '1px solid #cbd5e1',
-            borderRadius: '8px',
-            fontWeight: '500',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-        },
-    };
-
-    return (
-        <Layout>
-            <div style={styles.wrapper}>
-                {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-                <ConfirmModal
-                    isOpen={confirmModal.isOpen}
-                    onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                    onConfirm={confirmModal.onConfirm}
-                    title={confirmModal.title}
-                    message={confirmModal.message}
-                    isDanger={confirmModal.isDanger}
-                />
-
-                {/* ═══════ NOTICES TAB ═══════ */}
-                {activeTab === 'notices' && (
-                    <>
-                        {/* Pending Notices */}
-                        <div style={styles.outerCard}>
-                            <h2 style={styles.sectionTitle}>
-                                Pending Notices{pendingNotices.length > 0 && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>●</span>}
-                            </h2>
-
-                            {pendingNotices.length === 0 ? (
-                                <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No pending notices.</p>
-                            ) : pendingNotices.map(item => (
-                                <div key={item._id} style={styles.noticeCard}>
-                                    <div className="chairman-card-row">
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-                                                <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1e293b', margin: 0 }}>{item.title}</h4>
-                                                <span style={styles.badge(item.target_batch ? 'batch' : 'global')}>
-                                                    {item.target_batch ? item.target_batch.batch_name : 'Everyone'}
-                                                </span>
-                                            </div>
-                                            <p style={{ color: '#475569', margin: '0 0 0.4rem', fontSize: '0.9rem', lineHeight: '1.5' }}>{item.content}</p>
-                                            <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                                                by: {item.author?.full_name} on {new Date(item.created_at).toLocaleDateString()}
-                                            </div>
-                                            {item.file_url && (
-                                                <a href={item.file_url} target="_blank" rel="noopener noreferrer" style={styles.attachBtn}>
-                                                    <FaPaperclip /> View Attached Document
-                                                </a>
-                                            )}
-                                        </div>
-                                        <div className="chairman-action-btns">
-                                            <button onClick={() => handleStatusUpdate(item._id, 'APPROVED', 'Notice')} style={styles.publishBtn}>Publish</button>
-                                            <button onClick={() => {
-                                                const fb = prompt('Reason for rejection?');
-                                                if (fb !== null) handleStatusUpdate(item._id, 'REJECTED', 'Notice', fb);
-                                            }} style={styles.declineBtn}>Decline</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Published Notices */}
-                        <div style={styles.outerCard}>
-                            <h2 style={styles.sectionTitle}>Published Notices</h2>
-                            {publishedNotices.length === 0 ? (
-                                <p style={{ color: '#94a3b8' }}>No published global notices.</p>
-                            ) : publishedNotices.map(item => (
-                                <div key={item._id} style={styles.noticeCard}>
-                                    <div className="chairman-card-row">
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.3rem' }}>{item.title}</h4>
-                                            <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0 0 0.4rem', lineHeight: '1.5' }}>{item.content}</p>
-                                            <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                                                To Everyone
-                                            </div>
-                                            {item.file_url && (
-                                                <a href={item.file_url} target="_blank" rel="noopener noreferrer" style={styles.attachBtn}>
-                                                    <FaPaperclip /> View Attached Document
-                                                </a>
-                                            )}
-                                        </div>
-                                        <button onClick={() => deleteItem(item._id)} style={styles.deleteBtn}>
-                                            <FaTrash />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
+        {/* ═══════ NOTICES TAB ═══════ */}
+        {activeTab === "notices" && (
+          <>
+            {/* Pending Notices */}
+            <div style={styles.outerCard}>
+              <h2 style={styles.sectionTitle}>
+                Pending Notices
+                {pendingNotices.length > 0 && (
+                  <span style={{ color: "#ef4444", fontSize: "0.9rem" }}>
+                    ●
+                  </span>
                 )}
+              </h2>
 
-                {/* ═══════ ROUTINE TAB ═══════ */}
-                {activeTab === 'routine' && (
-                    <>
-                        {/* Pending Routines */}
-                        <div style={styles.outerCard}>
-                            <h2 style={styles.sectionTitle}>
-                                Pending Routine{pendingRoutines.length > 0 && <span style={{ color: '#ef4444', fontSize: '0.9rem' }}>●</span>}
-                            </h2>
-
-                            {pendingRoutines.length === 0 ? (
-                                <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No pending routines.</p>
-                            ) : pendingRoutines.map(item => (
-                                <div key={item._id} style={styles.noticeCard}>
-                                    <div className="chairman-card-row">
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1e293b', margin: '0 0 0.3rem' }}>{item.title}</h4>
-                                            <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0 0 0.4rem' }}>{item.content}</p>
-                                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
-                                                by: {item.author?.full_name} on {new Date(item.created_at).toLocaleDateString()}
-                                            </div>
-                                            {item.file_url && (
-                                                <a href={item.file_url} target="_blank" rel="noopener noreferrer" style={styles.attachBtn}>
-                                                    <FaPaperclip /> View Attached Document
-                                                </a>
-                                            )}
-
-                                            {/* Feedback from Faculty toggle */}
-                                            {item.routine_feedbacks && item.routine_feedbacks.length > 0 && (
-                                                <>
-                                                    <button
-                                                        onClick={() => setExpandedRoutineFeedback(prev => ({ ...prev, [item._id]: !prev[item._id] }))}
-                                                        style={styles.feedbackToggleBtn}
-                                                    >
-                                                        Feedback from Faculty {expandedRoutineFeedback[item._id] ? <FaChevronUp /> : <FaChevronDown />}
-                                                    </button>
-                                                    {expandedRoutineFeedback[item._id] && (
-                                                        <div style={{ marginTop: '0.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                                                            {item.routine_feedbacks.map((fb, idx) => (
-                                                                <div key={idx} style={{ marginBottom: idx < item.routine_feedbacks.length - 1 ? '1rem' : 0 }}>
-                                                                    <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>{fb.from_user?.full_name || 'Faculty'}</div>
-                                                                    <p style={{ color: '#475569', fontSize: '0.85rem', margin: '0.25rem 0 0', lineHeight: '1.5' }}>{fb.message}</p>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="chairman-action-btns">
-                                            <button onClick={() => handleStatusUpdate(item._id, 'APPROVED', 'Routine')} style={styles.publishBtn}>Publish</button>
-                                            <button onClick={() => {
-                                                const fb = prompt('Reason for rejection?');
-                                                if (fb !== null) handleStatusUpdate(item._id, 'REJECTED', 'Routine', fb);
-                                            }} style={styles.declineBtn}>Decline</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+              {pendingNotices.length === 0 ? (
+                <p style={{ color: "#94a3b8", fontStyle: "italic" }}>
+                  No pending notices.
+                </p>
+              ) : (
+                pendingNotices.map((item) => (
+                  <div key={item._id} style={styles.noticeCard}>
+                    <div className="chairman-card-row">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.75rem",
+                            marginBottom: "0.4rem",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <h4
+                            style={{
+                              fontSize: "1.05rem",
+                              fontWeight: "700",
+                              color: "#1e293b",
+                              margin: 0,
+                            }}
+                          >
+                            {item.title}
+                          </h4>
+                          <span
+                            style={styles.badge(
+                              item.target_audience ? "audience" : "global",
+                            )}
+                          >
+                            {item.target_audience
+                              ? item.target_audience
+                              : "Everyone"}
+                          </span>
                         </div>
-
-                        {/* Published Routines */}
-                        <div style={styles.outerCard}>
-                            <h2 style={styles.sectionTitle}>Published Routine</h2>
-                            {publishedRoutines.length === 0 ? (
-                                <p style={{ color: '#94a3b8' }}>No published routines.</p>
-                            ) : publishedRoutines.map(item => (
-                                <div key={item._id} style={styles.noticeCard}>
-                                    <div className="chairman-card-row">
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.3rem' }}>{item.title}</h4>
-                                            {item.file_url && (
-                                                <a href={item.file_url} target="_blank" rel="noopener noreferrer" style={styles.attachBtn}>
-                                                    <FaPaperclip /> View Attached Document
-                                                </a>
-                                            )}
-                                        </div>
-                                        <button onClick={() => deleteItem(item._id)} style={styles.deleteBtn}>
-                                            <FaTrash />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                        <p
+                          style={{
+                            color: "#475569",
+                            margin: "0 0 0.4rem",
+                            fontSize: "0.9rem",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          {item.content}
+                        </p>
+                        <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+                          by: {item.author?.full_name} on{" "}
+                          {new Date(item.created_at).toLocaleDateString()}
                         </div>
-                    </>
-                )}
-
-                {/* ═══════ FEEDBACK TAB ═══════ */}
-                {activeTab === 'feedback' && (
-                    <div style={styles.outerCard}>
-                        <h2 style={{ ...styles.sectionTitle, textAlign: 'center', fontSize: '1.5rem' }}>Feedbacks</h2>
-                        {feedback.length === 0 ? (
-                            <p style={{ textAlign: 'center', color: '#94a3b8' }}>No registered feedback.</p>
-                        ) : feedback.map(item => (
-                            <div key={item._id} style={styles.noticeCard}>
-                                <div className="chairman-card-row">
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.25rem' }}>
-                                            {item.is_anonymous ? 'Anonymous' : item.from_batch?.batch_name || 'Unknown Batch'}
-                                        </h4>
-                                        <p style={{ color: '#475569', fontSize: '0.9rem', margin: 0, lineHeight: '1.5' }}>
-                                            {expandedFeedback[item._id] ? item.message_content : item.message_content?.slice(0, 120) + (item.message_content?.length > 120 ? '...' : '')}
-                                        </p>
-                                        {expandedFeedback[item._id] && (
-                                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-                                                {new Date(item.sent_at).toLocaleDateString()}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <button
-                                            onClick={() => setExpandedFeedback(prev => ({ ...prev, [item._id]: !prev[item._id] }))}
-                                            style={styles.readMoreBtn}
-                                        >
-                                            {expandedFeedback[item._id] ? 'Close' : 'Read More'}
-                                        </button>
-                                        <button onClick={() => deleteItem(item._id, 'feedback')} style={styles.deleteBtn}>
-                                            <FaTrash />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                        {item.file_url && (
+                          <a
+                            href={item.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={styles.attachBtn}
+                          >
+                            <FaPaperclip /> View Attached Document
+                          </a>
+                        )}
+                      </div>
+                      <div className="chairman-action-btns">
+                        <button
+                          onClick={() =>
+                            handleStatusUpdate(item._id, "APPROVED", "Notice")
+                          }
+                          style={styles.publishBtn}
+                        >
+                          Publish
+                        </button>
+                        <button
+                          onClick={() => {
+                            const fb = prompt("Reason for rejection?");
+                            if (fb !== null)
+                              handleStatusUpdate(
+                                item._id,
+                                "REJECTED",
+                                "Notice",
+                                fb,
+                              );
+                          }}
+                          style={styles.declineBtn}
+                        >
+                          Decline
+                        </button>
+                      </div>
                     </div>
-                )}
-
-                {/* ═══════ PROFILE TAB ═══════ */}
-                {activeTab === 'profile' && (
-                    <div style={styles.outerCard}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                            <div>
-                                <h2 style={{ ...styles.sectionTitle, marginBottom: '0.25rem' }}>Chairman Profile</h2>
-                                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>Manage your account details.</p>
-                            </div>
-                            <button style={styles.editProfileBtn}>Edit Profile</button>
-                        </div>
-
-                        <div className="chairman-profile-grid">
-                            <div style={styles.profileCard}>
-                                <label style={styles.profileLabel}>Full Name</label>
-                                <div style={styles.profileValue}>{user.name}</div>
-                            </div>
-                            <div style={styles.profileCard}>
-                                <label style={styles.profileLabel}>Email Address</label>
-                                <div style={styles.profileValue}>{user.email}</div>
-                            </div>
-                            <div style={styles.profileCard}>
-                                <label style={styles.profileLabel}>Role</label>
-                                <div style={styles.profileValue}>CHAIRMAN</div>
-                            </div>
-                            <div style={styles.profileCard}>
-                                <label style={styles.profileLabel}>Department</label>
-                                <div style={styles.profileValue}>{user.department || 'ICE'}</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                  </div>
+                ))
+              )}
             </div>
-        </Layout>
-    );
+
+            {/* Published Notices */}
+            <div style={styles.outerCard}>
+              <h2 style={styles.sectionTitle}>Published Notices</h2>
+              {publishedNotices.length === 0 ? (
+                <p style={{ color: "#94a3b8" }}>No published global notices.</p>
+              ) : (
+                publishedNotices.map((item) => (
+                  <div key={item._id} style={styles.noticeCard}>
+                    <div className="chairman-card-row">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4
+                          style={{
+                            fontSize: "1.05rem",
+                            fontWeight: "700",
+                            color: "#1e293b",
+                            marginBottom: "0.3rem",
+                          }}
+                        >
+                          {item.title}
+                        </h4>
+                        <p
+                          style={{
+                            color: "#475569",
+                            fontSize: "0.9rem",
+                            margin: "0 0 0.4rem",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          {item.content}
+                        </p>
+                        <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+                          To Everyone
+                        </div>
+                        {item.file_url && (
+                          <a
+                            href={item.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={styles.attachBtn}
+                          >
+                            <FaPaperclip /> View Attached Document
+                          </a>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => deleteItem(item._id)}
+                        style={styles.deleteBtn}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ═══════ ROUTINE TAB ═══════ */}
+        {activeTab === "routine" && (
+          <>
+            {/* Pending Routines */}
+            <div style={styles.outerCard}>
+              <h2 style={styles.sectionTitle}>
+                Pending Routine
+                {pendingRoutines.length > 0 && (
+                  <span style={{ color: "#ef4444", fontSize: "0.9rem" }}>
+                    ●
+                  </span>
+                )}
+              </h2>
+
+              {pendingRoutines.length === 0 ? (
+                <p style={{ color: "#94a3b8", fontStyle: "italic" }}>
+                  No pending routines.
+                </p>
+              ) : (
+                pendingRoutines.map((item) => (
+                  <div key={item._id} style={styles.noticeCard}>
+                    <div className="chairman-card-row">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4
+                          style={{
+                            fontSize: "1.05rem",
+                            fontWeight: "700",
+                            color: "#1e293b",
+                            margin: "0 0 0.3rem",
+                          }}
+                        >
+                          {item.title}
+                        </h4>
+                        <p
+                          style={{
+                            color: "#475569",
+                            fontSize: "0.9rem",
+                            margin: "0 0 0.4rem",
+                          }}
+                        >
+                          {item.content}
+                        </p>
+                        <div
+                          style={{
+                            fontSize: "0.8rem",
+                            color: "#94a3b8",
+                            marginBottom: "0.5rem",
+                          }}
+                        >
+                          by: {item.author?.full_name} on{" "}
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </div>
+                        {item.file_url && (
+                          <a
+                            href={item.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={styles.attachBtn}
+                          >
+                            <FaPaperclip /> View Attached Document
+                          </a>
+                        )}
+
+                        {/* Feedback from Faculty toggle */}
+                        {item.routine_feedbacks &&
+                          item.routine_feedbacks.length > 0 && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  setExpandedRoutineFeedback((prev) => ({
+                                    ...prev,
+                                    [item._id]: !prev[item._id],
+                                  }))
+                                }
+                                style={styles.feedbackToggleBtn}
+                              >
+                                Feedback from Faculty{" "}
+                                {expandedRoutineFeedback[item._id] ? (
+                                  <FaChevronUp />
+                                ) : (
+                                  <FaChevronDown />
+                                )}
+                              </button>
+                              {expandedRoutineFeedback[item._id] && (
+                                <div
+                                  style={{
+                                    marginTop: "0.5rem",
+                                    padding: "1rem",
+                                    background: "#f8fafc",
+                                    borderRadius: "10px",
+                                    border: "1px solid #e2e8f0",
+                                  }}
+                                >
+                                  {item.routine_feedbacks.map((fb, idx) => (
+                                    <div
+                                      key={idx}
+                                      style={{
+                                        marginBottom:
+                                          idx <
+                                          item.routine_feedbacks.length - 1
+                                            ? "1rem"
+                                            : 0,
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          fontWeight: "600",
+                                          color: "#1e293b",
+                                          fontSize: "0.9rem",
+                                        }}
+                                      >
+                                        {fb.from_user?.full_name || "Faculty"}
+                                      </div>
+                                      <p
+                                        style={{
+                                          color: "#475569",
+                                          fontSize: "0.85rem",
+                                          margin: "0.25rem 0 0",
+                                          lineHeight: "1.5",
+                                        }}
+                                      >
+                                        {fb.message}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          )}
+                      </div>
+                      <div className="chairman-action-btns">
+                        <button
+                          onClick={() =>
+                            handleStatusUpdate(item._id, "APPROVED", "Routine")
+                          }
+                          style={styles.publishBtn}
+                        >
+                          Publish
+                        </button>
+                        <button
+                          onClick={() => {
+                            const fb = prompt("Reason for rejection?");
+                            if (fb !== null)
+                              handleStatusUpdate(
+                                item._id,
+                                "REJECTED",
+                                "Routine",
+                                fb,
+                              );
+                          }}
+                          style={styles.declineBtn}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Published Routines */}
+            <div style={styles.outerCard}>
+              <h2 style={styles.sectionTitle}>Published Routine</h2>
+              {publishedRoutines.length === 0 ? (
+                <p style={{ color: "#94a3b8" }}>No published routines.</p>
+              ) : (
+                publishedRoutines.map((item) => (
+                  <div key={item._id} style={styles.noticeCard}>
+                    <div className="chairman-card-row">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4
+                          style={{
+                            fontSize: "1.05rem",
+                            fontWeight: "700",
+                            color: "#1e293b",
+                            marginBottom: "0.3rem",
+                          }}
+                        >
+                          {item.title}
+                        </h4>
+                        {item.file_url && (
+                          <a
+                            href={item.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={styles.attachBtn}
+                          >
+                            <FaPaperclip /> View Attached Document
+                          </a>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => deleteItem(item._id)}
+                        style={styles.deleteBtn}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ═══════ FEEDBACK TAB ═══════ */}
+        {activeTab === "feedback" && (
+          <div style={styles.outerCard}>
+            <h2
+              style={{
+                ...styles.sectionTitle,
+                textAlign: "center",
+                fontSize: "1.5rem",
+              }}
+            >
+              Feedbacks
+            </h2>
+            {feedback.length === 0 ? (
+              <p style={{ textAlign: "center", color: "#94a3b8" }}>
+                No registered feedback.
+              </p>
+            ) : (
+              feedback.map((item) => (
+                <div key={item._id} style={styles.noticeCard}>
+                  <div className="chairman-card-row">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h4
+                        style={{
+                          fontSize: "1.05rem",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
+                        {item.is_anonymous
+                          ? "Anonymous"
+                          : item.from_batch?.batch_name || "Unknown Batch"}
+                      </h4>
+                      <p
+                        style={{
+                          color: "#475569",
+                          fontSize: "0.9rem",
+                          margin: 0,
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        {expandedFeedback[item._id]
+                          ? item.message_content
+                          : item.message_content?.slice(0, 120) +
+                            (item.message_content?.length > 120 ? "..." : "")}
+                      </p>
+                      {expandedFeedback[item._id] && (
+                        <div
+                          style={{
+                            fontSize: "0.8rem",
+                            color: "#94a3b8",
+                            marginTop: "0.5rem",
+                          }}
+                        >
+                          {new Date(item.sent_at).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <button
+                        onClick={() =>
+                          setExpandedFeedback((prev) => ({
+                            ...prev,
+                            [item._id]: !prev[item._id],
+                          }))
+                        }
+                        style={styles.readMoreBtn}
+                      >
+                        {expandedFeedback[item._id] ? "Close" : "Read More"}
+                      </button>
+                      <button
+                        onClick={() => deleteItem(item._id, "feedback")}
+                        style={styles.deleteBtn}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* ═══════ PROFILE TAB ═══════ */}
+        {activeTab === "profile" && (
+          <div style={styles.outerCard}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "2rem",
+                flexWrap: "wrap",
+                gap: "1rem",
+              }}
+            >
+              <div>
+                <h2 style={{ ...styles.sectionTitle, marginBottom: "0.25rem" }}>
+                  Chairman Profile
+                </h2>
+                <p style={{ color: "#64748b", fontSize: "0.9rem", margin: 0 }}>
+                  Manage your account details.
+                </p>
+              </div>
+              <button style={styles.editProfileBtn}>Edit Profile</button>
+            </div>
+
+            <div className="chairman-profile-grid">
+              <div style={styles.profileCard}>
+                <label style={styles.profileLabel}>Full Name</label>
+                <div style={styles.profileValue}>{user.name}</div>
+              </div>
+              <div style={styles.profileCard}>
+                <label style={styles.profileLabel}>Email Address</label>
+                <div style={styles.profileValue}>{user.email}</div>
+              </div>
+              <div style={styles.profileCard}>
+                <label style={styles.profileLabel}>Role</label>
+                <div style={styles.profileValue}>CHAIRMAN</div>
+              </div>
+              <div style={styles.profileCard}>
+                <label style={styles.profileLabel}>Department</label>
+                <div style={styles.profileValue}>
+                  {user.department || "ICE"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
 };
 
 export default ChairmanDashboard;
@@ -2173,164 +4280,331 @@ export default ComputerOperatorDashboard;
 // End of file
 
 // Start of: ./client\src\pages\Home.jsx
-import React, { useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaArrowRight, FaChalkboardTeacher, FaLayerGroup, FaShieldAlt, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
-import { AuthContext } from '../context/AuthContext';
-import { Layout } from '../components/Layout';
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FaArrowRight,
+  FaChalkboardTeacher,
+  FaLayerGroup,
+  FaShieldAlt,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
+import { Layout } from "../components/Layout";
 
 const Home = () => {
-    const { user } = useContext(AuthContext);
-    const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-    const goToDashboard = () => {
-        if (!user) return;
-        if (user.role === 'CHAIRMAN') navigate('/chairman');
-        else if (user.role === 'COORDINATOR') navigate('/coordinator');
-        else if (user.role === 'COMPUTER_OPERATOR') navigate('/operator');
-        else if (user.role === 'CC') navigate('/cc');
-        else if (user.role === 'TEACHER') navigate('/teacher');
-        else if (user.role === 'BATCH') navigate('/batch');
-    };
+  const goToDashboard = () => {
+    if (!user) return;
+    if (user.role === "CHAIRMAN") navigate("/chairman");
+    else if (user.role === "COORDINATOR") navigate("/coordinator");
+    else if (user.role === "COMPUTER_OPERATOR") navigate("/operator");
+    else if (user.role === "CC") navigate("/cc");
+    else if (user.role === "TEACHER") navigate("/teacher");
+    else if (user.role === "BATCH") navigate("/batch");
+  };
 
-    return (
-        <Layout>
-            <div className="home-page" style={{ overflowX: 'hidden' }}>
+  return (
+    <Layout>
+      <div className="home-page" style={{ overflowX: "hidden" }}>
+        {/* HERO SECTION */}
+        <section id="home-hero" className="hero-section">
+          <div className="hero-bg-blob-1"></div>
+          <div className="hero-bg-blob-2"></div>
 
-                {/* HERO SECTION */}
-                <section id="home-hero" className="hero-section">
-                    <div className="hero-bg-blob-1"></div>
-                    <div className="hero-bg-blob-2"></div>
-
-                    <div className="hero-container animate-fade-up">
-                        <h1 className="hero-title" style={{ fontSize: '5rem', fontWeight: '900', color: '#ea580c', letterSpacing: '-2px', marginBottom: '1rem' }}>
-                            DeptHub
-                        </h1>
-                        <p className="hero-subtitle" style={{ fontSize: '1.3rem', color: '#64748b', marginBottom: '2.5rem', fontStyle: 'italic' }}>
-                            Connect, Coordinate, Create.
-                        </p>
-                        <div id="hero-cta" className="hero-btn-group animate-fade-up animate-delay-2">
-                            {!user ? (
-                                <>
-                                    <button onClick={() => navigate('/staff-login')} className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.05rem', borderRadius: '50px', background: '#ea580c', boxShadow: '0 10px 20px -5px rgba(234, 88, 12, 0.35)' }}>
-                                        Staff Login
-                                    </button>
-                                    <button onClick={() => navigate('/batch-login')} className="btn-secondary" style={{ padding: '1rem 2.5rem', fontSize: '1.05rem', borderRadius: '50px' }}>
-                                        Batch Login
-                                    </button>
-                                </>
-                            ) : (
-                                <button onClick={goToDashboard} className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem', borderRadius: '50px', background: '#ea580c', boxShadow: '0 10px 20px -5px rgba(234, 88, 12, 0.35)' }}>
-                                    Go to Dashboard <FaArrowRight style={{ marginLeft: '0.5rem' }} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </section>
-
-                {/* SERVICES SECTION */}
-                <section id="services" className="section-padding" style={{ background: '#ffffff' }}>
-                    <div className="container" style={{ maxWidth: '1100px' }}>
-                        <div className="section-header animate-fade-up animate-delay-1">
-                            <h2 className="section-title">Our Services</h2>
-                            <p className="section-subtitle">Designed to make your daily activities for the university life simplified.</p>
-                        </div>
-
-                        <div className="services-grid">
-                            {/* Service 1 */}
-                            <div className="service-card animate-fade-up animate-delay-1">
-                                <div className="service-icon-wrapper" style={{ background: '#dbeafe', color: '#2563eb' }}>
-                                    <FaChalkboardTeacher />
-                                </div>
-                                <h3 className="service-title">Academic Management</h3>
-                                <p className="service-desc">Empowering teachers and chairmen with tools to manage coursework, schedules, and departmental operations seamlessly.</p>
-                            </div>
-
-                            {/* Service 2 */}
-                            <div className="service-card animate-fade-up animate-delay-2">
-                                <div className="service-icon-wrapper" style={{ background: '#ffedd5', color: '#ea580c' }}>
-                                    <FaLayerGroup />
-                                </div>
-                                <h3 className="service-title">Resource Sharing</h3>
-                                <p className="service-desc">A unified hub for students to access study materials, assignments, and important documents uploaded by faculty.</p>
-                            </div>
-
-                            {/* Service 3 */}
-                            <div className="service-card animate-fade-up animate-delay-3">
-                                <div className="service-icon-wrapper" style={{ background: '#dcfce7', color: '#16a34a' }}>
-                                    <FaShieldAlt />
-                                </div>
-                                <h3 className="service-title">Secure Access</h3>
-                                <p className="service-desc">Role-based authentication ensures data privacy and security for all users, from students to administrators.</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* CONTACT SECTION */}
-                <section id="contact" className="section-padding" style={{ background: '#1e293b', color: 'white' }}>
-                    <div className="container" style={{ maxWidth: '1000px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem' }}>
-                            <div className="animate-fade-up">
-                                <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '1.5rem', color: 'white' }}>Get in Touch</h2>
-                                <p style={{ color: '#94a3b8', marginBottom: '2.5rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
-                                    Have questions about the platform? Reach out to our administrative team for support and inquiries.
-                                </p>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <div className="contact-item">
-                                        <div className="contact-icon-circle">
-                                            <FaEnvelope />
-                                        </div>
-                                        <div>
-                                            <div className="contact-label">Email Us</div>
-                                            <div className="contact-value">support@depthub.edu</div>
-                                        </div>
-                                    </div>
-                                    <div className="contact-item">
-                                        <div className="contact-icon-circle">
-                                            <FaPhone />
-                                        </div>
-                                        <div>
-                                            <div className="contact-label">Call Us</div>
-                                            <div className="contact-value">+1 (555) 123-4567</div>
-                                        </div>
-                                    </div>
-                                    <div className="contact-item">
-                                        <div className="contact-icon-circle">
-                                            <FaMapMarkerAlt />
-                                        </div>
-                                        <div>
-                                            <div className="contact-label">Visit Us</div>
-                                            <div className="contact-value">University Campus, Admin Block A</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="contact-form-card animate-fade-up animate-delay-2">
-                                <form onSubmit={(e) => e.preventDefault()}>
-                                    <div style={{ marginBottom: '1.5rem' }}>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#cbd5e1' }}>Your Name</label>
-                                        <input type="text" placeholder="John Doe" className="contact-input" />
-                                    </div>
-                                    <div style={{ marginBottom: '1.5rem' }}>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#cbd5e1' }}>Email Address</label>
-                                        <input type="email" placeholder="john@example.com" className="contact-input" />
-                                    </div>
-                                    <div style={{ marginBottom: '1.5rem' }}>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#cbd5e1' }}>Message</label>
-                                        <textarea rows="4" placeholder="How can we help you?" className="contact-input" style={{ resize: 'vertical' }}></textarea>
-                                    </div>
-                                    <button className="btn-primary" style={{ width: '100%', padding: '1rem', borderRadius: '12px', fontWeight: '600', fontSize: '1rem', background: '#ea580c' }}>Send Message</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
+          <div className="hero-container animate-fade-up">
+            <h1
+              className="hero-title"
+              style={{
+                fontSize: "10rem",
+                fontWeight: "900",
+                color: "#ea580c",
+                letterSpacing: "-2px",
+                marginBottom: "1rem",
+              }}
+            >
+              DeptHub
+            </h1>
+            <p
+              className="hero-subtitle"
+              style={{
+                fontSize: "1.3rem",
+                color: "#64748b",
+                marginBottom: "2.5rem",
+                fontStyle: "italic",
+              }}
+            >
+              Connect, Coordinate, Create.
+            </p>
+            <div
+              id="hero-cta"
+              className="hero-btn-group animate-fade-up animate-delay-2"
+            >
+              {!user ? (
+                <>
+                  <button
+                    onClick={() => navigate("/staff-login")}
+                    className="btn-primary"
+                    style={{
+                      padding: "1rem 2.5rem",
+                      fontSize: "1.05rem",
+                      borderRadius: "50px",
+                      background: "#ea580c",
+                      boxShadow: "0 10px 20px -5px rgba(234, 88, 12, 0.35)",
+                    }}
+                  >
+                    Faculty/Staff Login
+                  </button>
+                  <button
+                    onClick={() => navigate("/batch-login")}
+                    className="btn-secondary"
+                    style={{
+                      padding: "1rem 2.5rem",
+                      fontSize: "1.05rem",
+                      borderRadius: "50px",
+                    }}
+                  >
+                    Batch Login
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={goToDashboard}
+                  className="btn-primary"
+                  style={{
+                    padding: "1rem 2.5rem",
+                    fontSize: "1.1rem",
+                    borderRadius: "50px",
+                    background: "#ea580c",
+                    boxShadow: "0 10px 20px -5px rgba(234, 88, 12, 0.35)",
+                  }}
+                >
+                  Go to Dashboard{" "}
+                  <FaArrowRight style={{ marginLeft: "0.5rem" }} />
+                </button>
+              )}
             </div>
-        </Layout>
-    );
+          </div>
+        </section>
+
+        {/* SERVICES SECTION */}
+        <section
+          id="services"
+          className="section-padding"
+          style={{ background: "#ffffff" }}
+        >
+          <div className="container" style={{ maxWidth: "1100px" }}>
+            <div className="section-header animate-fade-up animate-delay-1">
+              <h2 className="section-title">Our Services</h2>
+              <p className="section-subtitle">
+                Designed to make your daily activities for the university life
+                simplified.
+              </p>
+            </div>
+
+            <div className="services-grid">
+              {/* Service 1 */}
+              <div className="service-card animate-fade-up animate-delay-1">
+                <div
+                  className="service-icon-wrapper"
+                  style={{ background: "#dbeafe", color: "#2563eb" }}
+                >
+                  <FaChalkboardTeacher />
+                </div>
+                <h3 className="service-title">Academic Management</h3>
+                <p className="service-desc">
+                  Empowering teachers and chairmen with tools to manage
+                  coursework, schedules, and departmental operations seamlessly.
+                </p>
+              </div>
+
+              {/* Service 2 */}
+              <div className="service-card animate-fade-up animate-delay-2">
+                <div
+                  className="service-icon-wrapper"
+                  style={{ background: "#ffedd5", color: "#ea580c" }}
+                >
+                  <FaLayerGroup />
+                </div>
+                <h3 className="service-title">Resource Sharing</h3>
+                <p className="service-desc">
+                  A unified hub for students to access study materials,
+                  assignments, and important documents uploaded by faculty.
+                </p>
+              </div>
+
+              {/* Service 3 */}
+              <div className="service-card animate-fade-up animate-delay-3">
+                <div
+                  className="service-icon-wrapper"
+                  style={{ background: "#dcfce7", color: "#16a34a" }}
+                >
+                  <FaShieldAlt />
+                </div>
+                <h3 className="service-title">Secure Access</h3>
+                <p className="service-desc">
+                  Role-based authentication ensures data privacy and security
+                  for all users, from students to administrators.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CONTACT SECTION */}
+        <section
+          id="contact"
+          className="section-padding"
+          style={{ background: "#1e293b", color: "white" }}
+        >
+          <div className="container" style={{ maxWidth: "1000px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: "4rem",
+              }}
+            >
+              <div className="animate-fade-up">
+                <h2
+                  style={{
+                    fontSize: "2.5rem",
+                    fontWeight: "700",
+                    marginBottom: "1.5rem",
+                    color: "white",
+                  }}
+                >
+                  Get in Touch
+                </h2>
+                <p
+                  style={{
+                    color: "#94a3b8",
+                    marginBottom: "2.5rem",
+                    fontSize: "1.1rem",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  Have questions about the platform? Reach out to our
+                  administrative team for support and inquiries.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <div className="contact-item">
+                    <div className="contact-icon-circle">
+                      <FaEnvelope />
+                    </div>
+                    <div>
+                      <div className="contact-label">Email Us</div>
+                      <div className="contact-value">support@depthub.edu</div>
+                    </div>
+                  </div>
+                  <div className="contact-item">
+                    <div className="contact-icon-circle">
+                      <FaPhone />
+                    </div>
+                    <div>
+                      <div className="contact-label">Call Us</div>
+                      <div className="contact-value">+1 (555) 123-4567</div>
+                    </div>
+                  </div>
+                  <div className="contact-item">
+                    <div className="contact-icon-circle">
+                      <FaMapMarkerAlt />
+                    </div>
+                    <div>
+                      <div className="contact-label">Visit Us</div>
+                      <div className="contact-value">
+                        University Campus, Admin Block A
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="contact-form-card animate-fade-up animate-delay-2">
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontSize: "0.9rem",
+                        color: "#cbd5e1",
+                      }}
+                    >
+                      Your Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      className="contact-input"
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontSize: "0.9rem",
+                        color: "#cbd5e1",
+                      }}
+                    >
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="john@example.com"
+                      className="contact-input"
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontSize: "0.9rem",
+                        color: "#cbd5e1",
+                      }}
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      rows="4"
+                      placeholder="How can we help you?"
+                      className="contact-input"
+                      style={{ resize: "vertical" }}
+                    ></textarea>
+                  </div>
+                  <button
+                    className="btn-primary"
+                    style={{
+                      width: "100%",
+                      padding: "1rem",
+                      borderRadius: "12px",
+                      fontWeight: "600",
+                      fontSize: "1rem",
+                      background: "#ea580c",
+                    }}
+                  >
+                    Send Message
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </Layout>
+  );
 };
 
 export default Home;
@@ -2338,815 +4612,1620 @@ export default Home;
 // End of file
 
 // Start of: ./client\src\pages\StaffLogin.jsx
-import React, { useState, useContext } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from "react";
+import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-import { Loader, Toast } from '../components/UI';
+import { Loader, Toast } from "../components/UI";
 
 const StaffLogin = () => {
-    const [isRegister, setIsRegister] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        email: '', password: '', confirmPassword: '', full_name: '', role: 'TEACHER', secret_code: '', department: ''
-    });
-    const [error, setError] = useState('');
-    const { loginUser, registerUser, user } = useContext(AuthContext);
-    const navigate = useNavigate();
+  const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    full_name: "",
+    role: "TEACHER",
+    secret_code: "",
+    department: "",
+  });
+  const [error, setError] = useState("");
+  const { loginUser, registerUser, user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-    React.useEffect(() => {
-        if (user) {
-            if (user.role === 'CHAIRMAN') navigate('/chairman');
-            else if (user.role === 'COMPUTER_OPERATOR') navigate('/operator');
-            else if (user.role === 'TEACHER') navigate('/teacher');
-            else if (user.role === 'BATCH') navigate('/batch');
+  React.useEffect(() => {
+    if (user) {
+      if (user.role === "CHAIRMAN") navigate("/chairman");
+      else if (user.role === "COMPUTER_OPERATOR") navigate("/operator");
+      else if (user.role === "TEACHER") navigate("/teacher");
+      else if (user.role === "BATCH") navigate("/batch");
+    }
+  }, [user, navigate]);
+
+  const onChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    // Trim whitespace from email and password
+    const email = formData.email.trim();
+    const password = formData.password.trim();
+    const confirmPassword = formData.confirmPassword.trim();
+    const full_name = formData.full_name.trim();
+    const department = formData.department.trim();
+    const secret_code = formData.secret_code.trim();
+
+    try {
+      let res;
+      if (isRegister) {
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          setLoading(false);
+          return;
         }
-    }, [user, navigate]);
+        res = await registerUser({
+          ...formData,
+          email,
+          password,
+          confirmPassword,
+          full_name,
+          department,
+          secret_code,
+        });
+      } else {
+        res = await loginUser(email, password);
+      }
 
-    const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+      if (res.success) {
+        // Redirection handled by useEffect
+      } else {
+        setError(res.msg);
+      }
+    } catch (err) {
+      console.error("StaffLogin Error:", err);
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const onSubmit = async e => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        // Trim whitespace from email and password
-        const email = formData.email.trim();
-        const password = formData.password.trim();
-        const confirmPassword = formData.confirmPassword.trim();
-        const full_name = formData.full_name.trim();
-        const department = formData.department.trim();
-        const secret_code = formData.secret_code.trim();
+  return (
+    <div
+      className="container"
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+      }}
+    >
+      <div className="glass-panel" style={{ width: "100%", maxWidth: "400px" }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--text-dim)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            fontSize: "0.9rem",
+            padding: "0",
+            marginBottom: "1rem",
+          }}
+        >
+          <FaArrowLeft size={14} /> Back
+        </button>
+        <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+          {isRegister ? "Faculty/Staff Registration" : "Faculty/Staff Login"}
+        </h2>
+        {error && <Toast message={error} onClose={() => setError("")} />}
 
-        try {
-            let res;
-            if (isRegister) {
-                if (password !== confirmPassword) {
-                    setError('Passwords do not match');
-                    setLoading(false);
-                    return;
-                }
-                res = await registerUser({ ...formData, email, password, confirmPassword, full_name, department, secret_code });
-            } else {
-                res = await loginUser(email, password);
-            }
-
-            if (res.success) {
-                // Redirection handled by useEffect
-            } else {
-                setError(res.msg);
-            }
-        } catch (err) {
-            console.error('StaffLogin Error:', err);
-            setError(err.message || 'An unexpected error occurred.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-            <div className="glass-panel" style={{ width: '100%', maxWidth: '400px' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                    {isRegister ? 'Staff Registration' : 'Staff Login'}
-                </h2>
-                {error && <Toast message={error} onClose={() => setError('')} />}
-
-                {loading ? <div style={{ textAlign: 'center', padding: '2rem' }}><Loader /><p style={{ marginTop: '1rem', color: 'var(--text-dim)' }}>Connecting to server...</p></div> :
-                    <form onSubmit={onSubmit}>
-                        {isRegister && (
-                            <>
-                                <input type="text" placeholder="Full Name" name="full_name" value={formData.full_name} onChange={onChange} required />
-                                <select name="role" value={formData.role} onChange={onChange}>
-                                    <option value="TEACHER">Teacher</option>
-                                    <option value="CHAIRMAN">Chairman</option>
-                                </select>
-                                <input type="text" placeholder="Department (e.g. CSE)" name="department" value={formData.department} onChange={onChange} required />
-                                <input type="text" placeholder={formData.role === 'CHAIRMAN' ? "Chairman Secret Code" : "Faculty Secret Code"} name="secret_code" value={formData.secret_code} onChange={onChange} required />
-                            </>
-                        )}
-                        <input type="email" placeholder="Email Address" name="email" value={formData.email} onChange={onChange} required />
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Password"
-                                name="password"
-                                value={formData.password}
-                                onChange={onChange}
-                                required
-                                style={{ paddingRight: '40px' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '38%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    color: 'var(--text-dim)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '5px'
-                                }}
-                            >
-                                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                            </button>
-                        </div>
-
-                        {isRegister && (
-                            <div style={{ position: 'relative', marginTop: '1rem' }}>
-                                <input
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    placeholder="Confirm Password"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={onChange}
-                                    required
-                                    style={{ paddingRight: '40px' }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    style={{
-                                        position: 'absolute',
-                                        right: '10px',
-                                        top: '38%',
-                                        transform: 'translateY(-50%)',
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        color: 'var(--text-dim)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        padding: '5px'
-                                    }}
-                                >
-                                    {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                                </button>
-                            </div>
-                        )}
-
-                        {isRegister && formData.confirmPassword && (
-                            <div style={{
-                                marginTop: '0.5rem',
-                                marginBottom: '1rem',
-                                fontSize: '0.85rem',
-                                color: formData.password === formData.confirmPassword ? '#10b981' : '#ef4444',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.4rem',
-                                paddingLeft: '0.2rem'
-                            }}>
-                                <div style={{
-                                    width: '8px',
-                                    height: '8px',
-                                    borderRadius: '50%',
-                                    background: formData.password === formData.confirmPassword ? '#10b981' : '#ef4444'
-                                }}></div>
-                                {formData.password === formData.confirmPassword ? 'Passwords match' : 'Passwords do not match'}
-                            </div>
-                        )}
-
-                        <button type="submit" className="btn-primary" style={{ width: '100%' }}>
-                            {isRegister ? 'Register' : 'Login'}
-                        </button>
-                    </form>
-                }
-
-                <p style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.9rem' }}>
-                    {isRegister ? 'Already have an account?' : 'Need an account?'}
-                    <button
-                        onClick={() => setIsRegister(!isRegister)}
-                        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', marginLeft: '0.5rem', fontWeight: 'bold' }}>
-                        {isRegister ? 'Login' : 'Register'}
-                    </button>
-                </p>
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <Loader />
+            <p style={{ marginTop: "1rem", color: "var(--text-dim)" }}>
+              Connecting to server...
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit}>
+            {isRegister && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  name="full_name"
+                  value={formData.full_name}
+                  onChange={onChange}
+                  required
+                />
+                <select name="role" value={formData.role} onChange={onChange}>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="CHAIRMAN">Chairman</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Department (e.g. CSE)"
+                  name="department"
+                  value={formData.department}
+                  onChange={onChange}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder={
+                    formData.role === "CHAIRMAN"
+                      ? "Chairman Secret Code"
+                      : "Faculty Secret Code"
+                  }
+                  name="secret_code"
+                  value={formData.secret_code}
+                  onChange={onChange}
+                  required
+                />
+              </>
+            )}
+            <input
+              type="email"
+              placeholder="Email Address"
+              name="email"
+              value={formData.email}
+              onChange={onChange}
+              required
+            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                name="password"
+                value={formData.password}
+                onChange={onChange}
+                required
+                style={{ paddingRight: "40px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "38%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-dim)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "5px",
+                }}
+              >
+                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+              </button>
             </div>
-        </div >
-    );
+
+            {isRegister && (
+              <div style={{ position: "relative", marginTop: "1rem" }}>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={onChange}
+                  required
+                  style={{ paddingRight: "40px" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "38%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--text-dim)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "5px",
+                  }}
+                >
+                  {showConfirmPassword ? (
+                    <FaEyeSlash size={18} />
+                  ) : (
+                    <FaEye size={18} />
+                  )}
+                </button>
+              </div>
+            )}
+
+            {isRegister && formData.confirmPassword && (
+              <div
+                style={{
+                  marginTop: "0.5rem",
+                  marginBottom: "1rem",
+                  fontSize: "0.85rem",
+                  color:
+                    formData.password === formData.confirmPassword
+                      ? "#10b981"
+                      : "#ef4444",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  paddingLeft: "0.2rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background:
+                      formData.password === formData.confirmPassword
+                        ? "#10b981"
+                        : "#ef4444",
+                  }}
+                ></div>
+                {formData.password === formData.confirmPassword
+                  ? "Passwords match"
+                  : "Passwords do not match"}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{ width: "100%" }}
+            >
+              {isRegister ? "Register" : "Login"}
+            </button>
+          </form>
+        )}
+
+        <p
+          style={{
+            marginTop: "1rem",
+            textAlign: "center",
+            color: "var(--text-dim)",
+            fontSize: "0.9rem",
+          }}
+        >
+          {isRegister ? "Already have an account?" : "Need an account?"}
+          <button
+            onClick={() => setIsRegister(!isRegister)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--accent)",
+              cursor: "pointer",
+              marginLeft: "0.5rem",
+              fontWeight: "bold",
+            }}
+          >
+            {isRegister ? "Login" : "Register"}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default StaffLogin;
 
 // End of file
 
-// Start of: ./client\src\pages\TeacherDashboard.jsx
-import React, { useState, useEffect, useContext } from 'react';
-import axios from '../utils/axiosConfig';
-import { AuthContext } from '../context/AuthContext';
-import { Layout } from '../components/Layout';
-import { Loader, ConfirmModal } from '../components/UI';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCloudUploadAlt, FaFilePdf, FaTrash, FaFolder, FaPaperclip, FaFileImage, FaFileWord, FaFileExcel, FaFilePowerpoint, FaFileArchive, FaFileCode, FaFileVideo, FaFileAudio, FaFileAlt } from 'react-icons/fa';
+// Start of: ./client\src\pages\TeacherDashboard\TeacherDashboard.jsx
+import React, { useState, useEffect, useContext } from "react";
+import axios from "../../utils/axiosConfig";
+import { AuthContext } from "../../context/AuthContext";
+import { Layout } from "../../components/Layout";
+import { Loader, ConfirmModal } from "../../components/UI";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FaCloudUploadAlt,
+  FaFilePdf,
+  FaTrash,
+  FaFolder,
+  FaPaperclip,
+  FaFileImage,
+  FaFileWord,
+  FaFileExcel,
+  FaFilePowerpoint,
+  FaFileArchive,
+  FaFileCode,
+  FaFileVideo,
+  FaFileAudio,
+  FaFileAlt,
+} from "react-icons/fa";
+import NoticeDetail from "../../components/NoticeDetail";
+import Notice from "../../components/Notice";
 
 /* ─── Shared Inline Styles ─── */
-const s = {
-    wrapper: { maxWidth: '900px', margin: '0 auto', padding: '1rem 1rem 4rem' },
-    outerCard: {
-        background: '#fff', borderRadius: '18px', border: '1px solid #ffe0cc',
-        padding: '2rem 2rem 2.5rem', marginBottom: '2rem',
-    },
-    sectionTitle: {
-        fontFamily: "'Georgia', serif", fontStyle: 'italic', fontSize: '1.35rem',
-        color: '#ea580c', fontWeight: '600', marginBottom: '1.5rem',
-    },
-    label: { display: 'block', marginBottom: '0.4rem', fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' },
-    input: {
-        width: '100%', padding: '0.85rem 1rem', borderRadius: '10px',
-        border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.95rem',
-        outline: 'none', boxSizing: 'border-box',
-    },
-    textarea: {
-        width: '100%', padding: '0.85rem 1rem', borderRadius: '10px',
-        border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.95rem',
-        resize: 'none', outline: 'none', boxSizing: 'border-box',
-    },
-    submitBtn: {
-        display: 'block', width: '100%', maxWidth: '320px', margin: '1.5rem auto 0',
-        padding: '0.85rem 2rem', background: '#ea580c', color: '#fff', border: 'none',
-        borderRadius: '10px', fontWeight: '700', fontSize: '0.95rem', cursor: 'pointer',
-        textAlign: 'center',
-    },
-    uploadZone: {
-        border: '2px dashed #fed7aa', background: '#fff7ed', borderRadius: '14px',
-        padding: '3rem 2rem', textAlign: 'center', cursor: 'pointer',
-    },
-    attachBtn: {
-        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-        padding: '0.5rem 1.25rem',
-        background: 'linear-gradient(135deg, #fef3c7 0%, #ffedd5 100%)',
-        color: '#b45309', borderRadius: '8px', textDecoration: 'none',
-        fontSize: '0.85rem', fontWeight: '600', border: '1px solid #fcd34d',
-        marginTop: '0.75rem',
-    },
-    batchBadge: (active) => ({
-        display: 'inline-block', padding: '0.35rem 1.1rem', borderRadius: '8px',
-        fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer', border: 'none',
-        background: active ? '#ea580c' : '#fff7ed', color: active ? '#fff' : '#ea580c',
-        transition: 'all 0.2s',
-    }),
-    folderCard: {
-        background: '#fff', borderRadius: '14px', border: '1px solid #f1f5f9',
-        padding: '1.5rem', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        cursor: 'pointer', transition: 'all 0.2s',
-    },
-    deleteBtn: {
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: '28px', height: '28px', background: 'transparent', color: '#ef4444',
-        border: 'none', borderRadius: '50%', cursor: 'pointer', fontSize: '0.8rem',
-    },
-    noticeCard: {
-        background: '#fff', borderRadius: '14px', border: '1px solid #f1f5f9',
-        padding: '1.25rem 1.5rem', marginBottom: '1.25rem',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    },
-    publishBtn: {
-        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-        padding: '0.45rem 1.2rem', background: '#ea580c', color: '#fff', border: 'none',
-        borderRadius: '8px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer',
-    },
-    declineBtn: {
-        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-        padding: '0.45rem 1.2rem', background: '#fff', color: '#1e293b',
-        border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '500',
-        fontSize: '0.85rem', cursor: 'pointer',
-    },
-    profileCard: {
-        background: '#f8fafc', padding: '1.5rem', borderRadius: '14px', border: '1px solid #e2e8f0',
-    },
-    profileLabel: { display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: '500' },
-    profileValue: { fontWeight: '700', color: '#1e293b', fontSize: '1rem' },
-    feedbackToggle: {
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-        padding: '0.6rem 1.5rem', background: '#fff', border: '1px solid #cbd5e1',
-        borderRadius: '10px', fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer',
-        margin: '0 auto',
-    },
-};
+import s from "../../utils/teacherDashboard";
 
 // Helper for file icons
 const getFileIcon = (filename) => {
-    if (!filename) return <FaFileAlt size={36} />;
-    const ext = filename.split('.').pop().toLowerCase();
-    if (['pdf'].includes(ext)) return <FaFilePdf size={36} color="#ef4444" />;
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) return <FaFileImage size={36} color="#3b82f6" />;
-    if (['doc', 'docx'].includes(ext)) return <FaFileWord size={36} color="#2563eb" />;
-    if (['xls', 'xlsx', 'csv'].includes(ext)) return <FaFileExcel size={36} color="#16a34a" />;
-    if (['ppt', 'pptx'].includes(ext)) return <FaFilePowerpoint size={36} color="#d97706" />;
-    if (['zip', 'rar', '7z', 'tar'].includes(ext)) return <FaFileArchive size={36} color="#9333ea" />;
-    if (['mp4', 'mkv', 'avi', 'mov'].includes(ext)) return <FaFileVideo size={36} color="#be123c" />;
-    if (['mp3', 'wav', 'ogg'].includes(ext)) return <FaFileAudio size={36} color="#db2777" />;
-    if (['js', 'jsx', 'ts', 'tsx', 'html', 'css', 'json', 'py', 'java', 'c', 'cpp'].includes(ext)) return <FaFileCode size={36} color="#4b5563" />;
-    return <FaFileAlt size={36} color="#64748b" />;
+  if (!filename) return <FaFileAlt size={36} />;
+  const ext = filename.split(".").pop().toLowerCase();
+  if (["pdf"].includes(ext)) return <FaFilePdf size={36} color="#ef4444" />;
+  if (["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"].includes(ext))
+    return <FaFileImage size={36} color="#3b82f6" />;
+  if (["doc", "docx"].includes(ext))
+    return <FaFileWord size={36} color="#2563eb" />;
+  if (["xls", "xlsx", "csv"].includes(ext))
+    return <FaFileExcel size={36} color="#16a34a" />;
+  if (["ppt", "pptx"].includes(ext))
+    return <FaFilePowerpoint size={36} color="#d97706" />;
+  if (["zip", "rar", "7z", "tar"].includes(ext))
+    return <FaFileArchive size={36} color="#9333ea" />;
+  if (["mp4", "mkv", "avi", "mov"].includes(ext))
+    return <FaFileVideo size={36} color="#be123c" />;
+  if (["mp3", "wav", "ogg"].includes(ext))
+    return <FaFileAudio size={36} color="#db2777" />;
+  if (
+    [
+      "js",
+      "jsx",
+      "ts",
+      "tsx",
+      "html",
+      "css",
+      "json",
+      "py",
+      "java",
+      "c",
+      "cpp",
+    ].includes(ext)
+  )
+    return <FaFileCode size={36} color="#4b5563" />;
+  return <FaFileAlt size={36} color="#64748b" />;
 };
 
 const TeacherDashboard = () => {
-    const { user, loadUser, loading: authLoading } = useContext(AuthContext);
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('new-upload');
-    const [batches, setBatches] = useState([]);
-    const [myDocs, setMyDocs] = useState([]);
-    const [notices, setNotices] = useState([]);
-    const [routines, setRoutines] = useState([]);
-    const [selectedBatch, setSelectedBatch] = useState('');
-    const [file, setFile] = useState(null);
-    const [msg, setMsg] = useState('');
-    const [loading, setLoading] = useState(false);
+  const { user, loadUser, loading: authLoading } = useContext(AuthContext);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("new-upload");
+  const [batches, setBatches] = useState([]);
+  const [myDocs, setMyDocs] = useState([]);
+  const [notices, setNotices] = useState([]);
+  const [routines, setRoutines] = useState([]);
+  const [selectedBatch, setSelectedBatch] = useState("");
+  const [file, setFile] = useState(null);
+  const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+  // Add these with your other state declarations
+  const [peerFeedbackText, setPeerFeedbackText] = useState({}); // { [routineId]: 'text' }
+  const [peerFeedbackSending, setPeerFeedbackSending] = useState({}); // { [routineId]: true/false }
+  const [peerFeedbackSent, setPeerFeedbackSent] = useState({}); // { [routineId]: true }
+  // Profile
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState({
+    full_name: "",
+    email: "",
+    department: "",
+  });
 
-    // Profile
-    const [editMode, setEditMode] = useState(false);
-    const [editData, setEditData] = useState({ full_name: '', email: '', department: '' });
+  // Modal
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    isDanger: false,
+  });
+  const closeConfirmModal = () =>
+    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
 
-    // Modal
-    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDanger: false });
-    const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
+  // Feedback
+  const [feedbackList, setFeedbackList] = useState([]);
 
-    // Feedback
-    const [feedbackList, setFeedbackList] = useState([]);
+  // Notices sub-view
+  const [showNoticeForm, setShowNoticeForm] = useState(false);
+  const [noticeAudience, setNoticeAudience] = useState("");
 
+  const [selectedNotice, setSelectedNotice] = useState(null);
 
-    // Notices sub-view
-    const [showNoticeForm, setShowNoticeForm] = useState(false);
+  const openNotice = (notice) => {
+    setSelectedNotice(notice);
+  };
 
-    // My Uploads - open batch folder (null = show folder list)
-    const [openBatchFolder, setOpenBatchFolder] = useState(null);
+  const closeNotice = () => {
+    setSelectedNotice(null);
+  };
+  // My Uploads - open batch folder (null = show folder list)
+  const [openBatchFolder, setOpenBatchFolder] = useState(null);
 
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const tab = params.get('tab');
-        if (tab) setActiveTab(tab);
-        else navigate('?tab=announcement', { replace: true });
-    }, [location.search, navigate]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab) setActiveTab(tab);
+    else navigate("?tab=announcement", { replace: true });
+  }, [location.search, navigate]);
 
-    const fetchBatches = async () => {
-        try {
-            const res = await axios.get('/batches');
-            setBatches(res.data);
-            if (res.data.length > 0 && !selectedBatch) setSelectedBatch(res.data[0]._id);
-        } catch (err) { console.error(err); }
-    };
+  const fetchBatches = async () => {
+    try {
+      const res = await axios.get("/batches");
+      setBatches(res.data);
+      if (res.data.length > 0 && !selectedBatch)
+        setSelectedBatch(res.data[0]._id);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    const fetchMyDocs = async () => {
-        try { const res = await axios.get('/documents/my-uploads'); setMyDocs(res.data); }
-        catch (err) { console.error(err); }
-    };
+  const fetchMyDocs = async () => {
+    try {
+      const res = await axios.get("/documents/my-uploads");
+      setMyDocs(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    const fetchNotices = async () => {
-        try { const res = await axios.get('/announcements'); setNotices(res.data.filter(n => n.type === 'NOTICE')); }
-        catch (err) { console.error(err); }
-    };
+  const fetchNotices = async () => {
+    try {
+      const res = await axios.get("/announcements");
+      setNotices(res.data.filter((n) => n.type === "NOTICE"));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    const fetchRoutines = async () => {
-        try {
-            const res = await axios.get('/announcements');
-            const allRoutines = res.data.filter(n => n.type === 'ROUTINE');
-            setRoutines(allRoutines);
-            // Fetch feedback for routines pending feedback
-            const pendingFeedbackRoutines = allRoutines.filter(r => r.status === 'PENDING_FEEDBACK');
-            if (pendingFeedbackRoutines.length > 0) {
-                let allFeedback = [];
-                for (let r of pendingFeedbackRoutines) {
-                    try {
-                        const fbRes = await axios.get(`/feedback?target_announcement_id=${r._id}`);
-                        allFeedback = [...allFeedback, ...fbRes.data];
-                    } catch (e) { console.error(e); }
-                }
-                setFeedbackList(allFeedback);
-            }
-        } catch (err) { console.error(err); }
-    };
+  const fetchRoutines = async () => {
+    try {
+      const res = await axios.get("/announcements");
+      const allRoutines = res.data.filter((n) => n.type === "ROUTINE");
+      setRoutines(allRoutines);
 
-    useEffect(() => {
-        if (activeTab === 'new-upload' || activeTab === 'announcement') fetchBatches();
-        if (activeTab === 'my-uploads') fetchMyDocs();
-        if (activeTab === 'notices') fetchNotices();
-        if (activeTab === 'routine') fetchRoutines();
-    }, [activeTab]);
-
-    const handleUpload = async (e) => {
-        e.preventDefault();
-        if (!file) return;
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('target_batch_id', selectedBatch);
-        setLoading(true); setMsg('');
-        try {
-            await axios.post(`/documents/upload?target_batch_id=${selectedBatch}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setMsg('File Uploaded Successfully'); setFile(null);
-        } catch (err) { setMsg('Upload Failed'); }
-        finally { setLoading(false); }
-    };
-
-    const handleRoutineUpload = async (status) => {
-        if (!file) { alert("Please select a file."); return; }
-        const msg = document.getElementById('routineMsg').value;
-        if (!msg) { alert("Please enter routine details."); return; }
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('title', 'Routine');
-        formData.append('content', msg);
-        formData.append('type', 'ROUTINE');
-        formData.append('status', status);
-
-        setLoading(true);
-        try {
-            await axios.post('/announcements', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-            alert('Routine submitted successfully!');
-            setFile(null);
-            document.getElementById('routineMsg').value = '';
-            document.getElementById('routineFile').value = '';
-            fetchRoutines();
-        } catch (err) { alert('Failed to send routine'); }
-        finally { setLoading(false); }
-    };
-
-    const sendToChairman = async (id) => {
-        if (!window.confirm('Are you sure you want to send this routine to the Chairman for final approval?')) return;
-        try {
-            await axios.put(`/announcements/${id}/status`, { status: 'PENDING_APPROVAL' });
-            alert('Routine sent to Chairman for approval!');
-            fetchRoutines();
-        } catch (err) {
-            console.error(err);
-            alert('Failed to send for approval');
+      // Fetch feedback for ALL PENDING_FEEDBACK routines (own + peers)
+      const needsFeedback = allRoutines.filter(
+        (r) => r.status === "PENDING_FEEDBACK",
+      );
+      if (needsFeedback.length > 0) {
+        let allFeedback = [];
+        for (let r of needsFeedback) {
+          try {
+            const fbRes = await axios.get(
+              `/feedback?target_announcement_id=${r._id}`,
+            );
+            allFeedback = [...allFeedback, ...fbRes.data];
+          } catch (e) {
+            console.error(e);
+          }
         }
-    };
+        setFeedbackList(allFeedback);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    const handleClassUpdate = async (e) => {
-        e.preventDefault();
-        setLoading(true); setMsg('');
+  useEffect(() => {
+    if (activeTab === "new-upload" || activeTab === "announcement")
+      fetchBatches();
+    if (activeTab === "my-uploads") fetchMyDocs();
+    if (activeTab === "notices") fetchNotices();
+    if (activeTab === "routine") fetchRoutines();
+  }, [activeTab]);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("target_batch_id", selectedBatch);
+    setLoading(true);
+    setMsg("");
+    try {
+      await axios.post(
+        `/documents/upload?target_batch_id=${selectedBatch}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      setMsg("File Uploaded Successfully");
+      setFile(null);
+    } catch {
+      setMsg("Upload Failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoutineUpload = async (status) => {
+    if (!file) {
+      alert("Please select a file.");
+      return;
+    }
+    const msg = document.getElementById("routineMsg").value;
+    if (!msg) {
+      alert("Please enter routine details.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", "Routine");
+    formData.append("content", msg);
+    formData.append("type", "ROUTINE");
+    formData.append("status", status);
+
+    setLoading(true);
+    try {
+      await axios.post("/announcements", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Routine submitted successfully!");
+      setFile(null);
+      document.getElementById("routineMsg").value = "";
+      document.getElementById("routineFile").value = "";
+      fetchRoutines();
+    } catch {
+      alert("Failed to send routine");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendToChairman = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to send this routine to the Chairman for final approval?",
+      )
+    )
+      return;
+    try {
+      await axios.put(`/announcements/${id}/status`, {
+        status: "PENDING_APPROVAL",
+      });
+      alert("Routine sent to Chairman for approval!");
+      fetchRoutines();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send for approval");
+    }
+  };
+
+  const handleClassUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg("");
+    try {
+      const message = e.target.message.value;
+      const title = e.target.title_display?.value || "Announcement";
+      await axios.post("/announcements", {
+        title,
+        content: message,
+        type: "ANNOUNCEMENT",
+        target_batch: selectedBatch,
+        target_audience: "Student",
+      });
+      setMsg("Announcement Sent Successfully");
+      e.target.reset();
+    } catch {
+      setMsg("Failed to send");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNoticeSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg("");
+    try {
+      const formData = new FormData();
+      formData.append("title", e.target.noticeTitle.value);
+      formData.append("content", e.target.noticeContent.value);
+      formData.append("type", "NOTICE");
+      formData.append("target_audience", noticeAudience);
+      if (e.target.noticeFile.files[0])
+        formData.append("file", e.target.noticeFile.files[0]);
+      await axios.post("/announcements", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Notice sent for approval!");
+      e.target.reset();
+      setNoticeAudience("Everyone");
+      setShowNoticeForm(false);
+      fetchNotices();
+    } catch {
+      alert("Failed to submit notice");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put("/auth/profile", editData);
+      if (res.data.success) {
+        alert("Profile Updated.");
+        setEditMode(false);
+        await loadUser();
+      }
+    } catch {
+      alert("Update failed");
+    }
+  };
+  const submitPeerFeedback = async (routineId) => {
+    const text = peerFeedbackText[routineId]?.trim();
+    if (!text) return alert("Please write your feedback first.");
+
+    setPeerFeedbackSending((prev) => ({ ...prev, [routineId]: true }));
+    try {
+      await axios.post("/feedback", {
+        message_content: text,
+        target_announcement: routineId,
+      });
+      // Mark as sent and clear the input
+      setPeerFeedbackSent((prev) => ({ ...prev, [routineId]: true }));
+      setPeerFeedbackText((prev) => ({ ...prev, [routineId]: "" }));
+      fetchRoutines(); // refresh to show updated feedback count
+    } catch {
+      alert("Failed to submit feedback. Please try again.");
+    } finally {
+      setPeerFeedbackSending((prev) => ({ ...prev, [routineId]: false }));
+    }
+  };
+
+  const deleteFeedback = async (id) => {
+    if (!window.confirm("Delete this feedback?")) return;
+    try {
+      await axios.delete(`/feedback/${id}`);
+      fetchRoutines();
+    } catch {
+      alert("Failed");
+    }
+  };
+  const deleteRoutine = async (id) => {
+    if (!window.confirm("Delete this routine?")) return;
+    try {
+      await axios.delete(`/announcements/${id}`);
+      fetchRoutines();
+    } catch {
+      alert("Failed");
+    }
+  };
+  const deleteDoc = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete File?",
+      message: "Permanently delete this file?",
+      isDanger: true,
+      onConfirm: async () => {
         try {
-            const message = e.target.message.value;
-            const title = e.target.title_display?.value || 'Announcement';
-            await axios.post('/announcements', { title, content: message, type: 'ANNOUNCEMENT', target_batch: selectedBatch });
-            setMsg('Announcement Sent Successfully'); e.target.reset();
-        } catch (err) { setMsg('Failed to send'); }
-        finally { setLoading(false); }
-    };
+          await axios.delete(`/documents/${id}`);
+          fetchMyDocs();
+        } catch {
+          alert("Delete failed");
+        } finally {
+          closeConfirmModal();
+        }
+      },
+    });
+  };
 
-    const handleNoticeSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true); setMsg('');
-        try {
-            const formData = new FormData();
-            formData.append('title', e.target.noticeTitle.value);
-            formData.append('content', e.target.noticeContent.value);
-            formData.append('type', 'NOTICE');
-            formData.append('target_audience', e.target.audience.value);
-            if (e.target.noticeFile.files[0]) formData.append('file', e.target.noticeFile.files[0]);
-            await axios.post('/announcements', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-            alert('Notice sent for approval!'); e.target.reset(); setShowNoticeForm(false); fetchNotices();
-        } catch (err) { alert('Failed to submit notice'); }
-        finally { setLoading(false); }
-    };
-
-    const updateProfile = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await axios.put('/auth/profile', editData);
-            if (res.data.success) { alert('Profile Updated.'); setEditMode(false); await loadUser(); }
-        } catch (err) { alert('Update failed'); }
-    };
-
-
-
-    const deleteFeedback = async (id) => { if (!window.confirm('Delete this feedback?')) return; try { await axios.delete(`/feedback/${id}`); fetchRoutines(); } catch (err) { alert('Failed'); } };
-    const deleteRoutine = async (id) => { if (!window.confirm('Delete this routine?')) return; try { await axios.delete(`/announcements/${id}`); fetchRoutines(); } catch (err) { alert('Failed'); } };
-    const deleteDoc = (id) => {
-        setConfirmModal({
-            isOpen: true, title: 'Delete File?', message: 'Permanently delete this file?', isDanger: true,
-            onConfirm: async () => { try { await axios.delete(`/documents/${id}`); fetchMyDocs(); } catch (err) { alert('Delete failed'); } finally { closeConfirmModal(); } }
-        });
-    };
-
-    if (authLoading) return <div style={{ display: 'flex', justifyContent: 'center', height: '100vh', alignItems: 'center' }}><Loader /></div>;
-    if (!user) return null;
-
-    // Group uploads by batch for My Uploads tab
-    const groupedDocs = myDocs.reduce((acc, doc) => {
-        const batchName = doc.target_batch?.batch_name || 'General';
-        if (!acc[batchName]) acc[batchName] = [];
-        acc[batchName].push(doc);
-        return acc;
-    }, {});
-    const batchNames = Object.keys(groupedDocs);
-
-    // Routine helpers
-    const pendingRoutines = routines.filter(r => (r.status === 'PENDING_APPROVAL' || r.status === 'PENDING_FEEDBACK') && r.author?._id === user.id);
-    const publishedRoutines = routines.filter(r => r.status === 'APPROVED');
-
-
+  if (authLoading)
     return (
-        <Layout>
-            <div style={s.wrapper}>
-                <ConfirmModal isOpen={confirmModal.isOpen} onClose={closeConfirmModal} onConfirm={confirmModal.onConfirm} title={confirmModal.title} message={confirmModal.message} isDanger={confirmModal.isDanger} />
-
-                {/* ═══════ ANNOUNCEMENTS TAB ═══════ */}
-                {activeTab === 'announcement' && (
-                    <div style={s.outerCard}>
-                        <h2 style={s.sectionTitle}>Target Batch</h2>
-                        <form onSubmit={handleClassUpdate}>
-                            <div style={{ marginBottom: '1.25rem' }}>
-                                <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} style={s.input}>
-                                    {batches.map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
-                                </select>
-                            </div>
-                            <div style={{ marginBottom: '1.25rem' }}>
-                                <input name="title_display" placeholder="Title/Subject" style={s.input} />
-                            </div>
-                            <div style={{ marginBottom: '1.25rem' }}>
-                                <textarea name="message" placeholder="Message..." rows="4" style={s.textarea} required></textarea>
-                            </div>
-                            {msg && <div style={{ textAlign: 'center', padding: '0.75rem', background: msg.includes('Success') ? '#dcfce7' : '#fee2e2', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>{msg}</div>}
-                            <button type="submit" style={s.submitBtn} disabled={loading}>Send to Announcement</button>
-                        </form>
-                    </div>
-                )}
-
-                {/* ═══════ NEW UPLOAD TAB ═══════ */}
-                {activeTab === 'new-upload' && (
-                    <div style={s.outerCard}>
-                        <h2 style={s.sectionTitle}>Target Batch</h2>
-                        {msg && <div style={{ textAlign: 'center', padding: '0.75rem', background: msg.includes('Success') ? '#dcfce7' : '#fee2e2', color: msg.includes('Success') ? '#166534' : '#991b1b', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>{msg}</div>}
-                        <form onSubmit={handleUpload}>
-                            <div style={{ marginBottom: '1.25rem' }}>
-                                <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} style={s.input}>
-                                    {batches.map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
-                                </select>
-                            </div>
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={s.label}>Select Document</label>
-                                <div onClick={() => document.getElementById('resFile').click()} style={s.uploadZone}>
-                                    <div style={{ color: '#ea580c', marginBottom: '0.75rem' }}><FaCloudUploadAlt size={48} /></div>
-                                    {file ? <div style={{ fontWeight: '600', color: '#1e293b' }}>{file.name}</div> : <div style={{ color: '#1e293b', fontWeight: '600' }}>Click to browse file</div>}
-                                </div>
-                                <input id="resFile" type="file" onChange={e => setFile(e.target.files[0])} style={{ display: 'none' }} />
-                            </div>
-                            <button type="submit" style={s.submitBtn} disabled={loading}>Upload Resource</button>
-                        </form>
-                    </div>
-                )}
-
-                {/* ═══════ MY UPLOADS TAB ═══════ */}
-                {activeTab === 'my-uploads' && (
-                    <div style={s.outerCard}>
-                        {!openBatchFolder ? (
-                            /* ── Batch Folder List ── */
-                            batchNames.length === 0 ? (
-                                <p style={{ color: '#94a3b8', textAlign: 'center' }}>No uploads found.</p>
-                            ) : (
-                                <div className="teacher-folder-grid">
-                                    {batchNames.map(name => (
-                                        <div key={name} onClick={() => setOpenBatchFolder(name)} style={{ ...s.folderCard, cursor: 'pointer' }}>
-                                            <div style={{ color: '#f59e0b', marginBottom: '0.5rem' }}><FaFolder size={40} /></div>
-                                            <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#ea580c' }}>{name}</div>
-                                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>{groupedDocs[name].length} file(s)</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )
-                        ) : (
-                            /* ── Documents inside a batch folder ── */
-                            <>
-                                <button onClick={() => setOpenBatchFolder(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', color: '#ea580c', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', marginBottom: '1.25rem', padding: 0 }}>← Back</button>
-                                <h3 style={{ fontWeight: '700', color: '#1e293b', fontSize: '1.1rem', marginBottom: '1.25rem' }}>{openBatchFolder}</h3>
-                                {(groupedDocs[openBatchFolder] || []).length === 0 ? (
-                                    <p style={{ color: '#94a3b8', textAlign: 'center', fontStyle: 'italic' }}>No files in this batch.</p>
-                                ) : (
-                                    <div className="teacher-folder-grid">
-                                        {groupedDocs[openBatchFolder].map(doc => (
-                                            <div key={doc._id} style={{ ...s.folderCard, position: 'relative' }}>
-                                                <button onClick={() => deleteDoc(doc._id)} style={{ ...s.deleteBtn, position: 'absolute', top: '0.4rem', right: '0.4rem' }}><FaTrash size={10} /></button>
-                                                <a href={doc.file_path} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                                    <div style={{ marginBottom: '0.5rem' }}>{getFileIcon(doc.original_filename)}</div>
-                                                    <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#ea580c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.original_filename}</div>
-                                                </a>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {/* ═══════ NOTICES TAB ═══════ */}
-                {activeTab === 'notices' && (
-                    <>
-                        {!showNoticeForm ? (
-                            <>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                                    <h2 style={{ ...s.sectionTitle, marginBottom: 0 }}>Latest Notices</h2>
-                                    <button onClick={() => setShowNoticeForm(true)} style={s.publishBtn}>Create Notice</button>
-                                </div>
-                                <div style={{ ...s.outerCard, padding: '0', overflow: 'hidden' }}>
-                                    <div style={{ overflowX: 'auto' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
-                                            <thead>
-                                                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                    <th style={{ padding: '1.2rem 1.5rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>NO</th>
-                                                    <th style={{ padding: '1.2rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>TITLE</th>
-                                                    <th style={{ padding: '1.2rem 1rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>FILES</th>
-                                                    <th style={{ padding: '1.2rem 1rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>DATE</th>
-                                                    <th style={{ padding: '1.2rem 1.5rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {notices.filter(n => n.status === 'APPROVED').map((notice, index) => (
-                                                    <tr key={notice._id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                                                        <td style={{ padding: '1rem 1.5rem', color: '#64748b', fontSize: '0.9rem' }}>{index + 1}</td>
-                                                        <td style={{ padding: '1rem', fontWeight: '500', color: '#1e293b', fontSize: '0.9rem' }}>{notice.title}</td>
-                                                        <td style={{ padding: '1rem', textAlign: 'center' }}>{notice.file_url ? <FaFilePdf color="#ef4444" size={18} /> : '—'}</td>
-                                                        <td style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>{new Date(notice.created_at).toLocaleDateString()}</td>
-                                                        <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>{notice.file_url && <a href={notice.file_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontWeight: '500', textDecoration: 'none', fontSize: '0.85rem' }}>View</a>}</td>
-                                                    </tr>
-                                                ))}
-                                                {notices.filter(n => n.status === 'APPROVED').length === 0 && <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No notices found.</td></tr>}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div style={s.outerCard}>
-                                    <h2 style={s.sectionTitle}>📣 Post New Notice</h2>
-                                    <form onSubmit={handleNoticeSubmit}>
-                                        <div style={{ marginBottom: '1.25rem' }}><input name="noticeTitle" placeholder="Notice Title (e.g. Holi Holiday)" style={s.input} required /></div>
-                                        <div style={{ marginBottom: '1.25rem' }}><textarea name="noticeContent" placeholder="Notice Details" rows="4" style={s.textarea} required></textarea></div>
-                                        <div style={{ marginBottom: '1.25rem' }}>
-                                            <label style={s.label}>Attach Document (PDF/Image - Optional)</label>
-                                            <input name="noticeFile" type="file" accept=".pdf,.jpg,.png,.jpeg" style={{ fontSize: '0.9rem' }} />
-                                        </div>
-                                        <div style={{ marginBottom: '1.25rem' }}>
-                                            <label style={s.label}>Select Audience</label>
-                                            <select name="audience" style={s.input}>
-                                                <option value="Everyone">Teacher/Student/Everyone</option>
-                                                <option value="Teacher">Teacher Only</option>
-                                                <option value="Student">Student Only</option>
-                                            </select>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                            <button type="submit" style={{ ...s.submitBtn, margin: 0 }} disabled={loading}>Send for Approval</button>
-                                            <button type="button" onClick={() => setShowNoticeForm(false)} style={{ ...s.declineBtn, padding: '0.85rem 2rem' }}>Cancel</button>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div style={s.outerCard}>
-                                    <h2 style={s.sectionTitle}>⏳ Pending Notice</h2>
-                                    {notices.filter(n => (n.status === 'PENDING' || n.status === 'PENDING_APPROVAL') && n.author?._id === user.id).length === 0 ? (
-                                        <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No pending notices.</p>
-                                    ) : notices.filter(n => (n.status === 'PENDING' || n.status === 'PENDING_APPROVAL') && n.author?._id === user.id).map(item => (
-                                        <div key={item._id} style={s.noticeCard}>
-                                            <div className="chairman-card-row">
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.25rem' }}>{item.title}</h4>
-                                                    <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0 0 0.4rem', lineHeight: '1.5' }}>{item.content}</p>
-                                                    {item.file_url && <a href={item.file_url} target="_blank" rel="noopener noreferrer" style={s.attachBtn}><FaPaperclip /> View Attached Document</a>}
-                                                </div>
-                                                <button onClick={() => { if (window.confirm('Delete this pending notice?')) { axios.delete(`/announcements/${item._id}`).then(() => fetchNotices()); } }} style={s.deleteBtn}><FaTrash /></button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </>
-                )}
-
-                {/* ═══════ ROUTINE TAB ═══════ */}
-                {activeTab === 'routine' && (
-                    <>
-                        {/* Upload Routine */}
-                        <div style={s.outerCard}>
-                            <h2 style={s.sectionTitle}>Routine</h2>
-                            <form onSubmit={(e) => e.preventDefault()}>
-                                <div style={{ marginBottom: '1.25rem' }}>
-                                    <textarea name="msg" id="routineMsg" placeholder="Routine Details / Message..." rows="3" style={s.textarea} required></textarea>
-                                </div>
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={s.label}>Select Document</label>
-                                    <div onClick={() => document.getElementById('routineFile').click()} style={s.uploadZone}>
-                                        <div style={{ color: '#ea580c', marginBottom: '0.75rem' }}><FaCloudUploadAlt size={48} /></div>
-                                        {file ? <div style={{ fontWeight: '600', color: '#1e293b' }}>{file.name}</div> : <div style={{ color: '#1e293b', fontWeight: '600' }}>Click to browse file</div>}
-                                    </div>
-                                    <input id="routineFile" type="file" onChange={e => setFile(e.target.files[0])} style={{ display: 'none' }} accept=".pdf,.doc,.docx,.jpg,.png" />
-                                </div>
-                                <div className="teacher-routine-btns">
-                                    <button type="button" onClick={() => handleRoutineUpload('PENDING_FEEDBACK')} style={s.declineBtn} disabled={loading}>Request Peer Feedback</button>
-                                    <button type="button" onClick={() => handleRoutineUpload('PENDING_APPROVAL')} style={s.publishBtn} disabled={loading}>Send for Approval</button>
-                                </div>
-                            </form>
-                        </div>
-
-
-
-                        {/* Pending Routine / Routine for Approval */}
-                        {pendingRoutines.length > 0 && (
-                            <div style={s.outerCard}>
-                                <h2 style={s.sectionTitle}>⏳ Routine for Approval</h2>
-                                {pendingRoutines.map(r => (
-                                    <div key={r._id} style={s.noticeCard}>
-                                        <div className="chairman-card-row">
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <h4 style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.3rem' }}>
-                                                    {r.title}
-                                                    <span style={{ fontSize: '0.75rem', fontWeight: 'normal', marginLeft: '0.5rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: r.status === 'PENDING_FEEDBACK' ? '#fef3c7' : '#fed7aa', color: r.status === 'PENDING_FEEDBACK' ? '#b45309' : '#c2410c' }}>
-                                                        {r.status.replace('_', ' ')}
-                                                    </span>
-                                                </h4>
-                                                {r.content && <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 0.5rem' }}>{r.content}</p>}
-                                                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                    {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={s.attachBtn}><FaPaperclip /> View Attached Document</a>}
-                                                    {r.status === 'PENDING_FEEDBACK' && (
-                                                        <button onClick={() => sendToChairman(r._id)} style={{ ...s.publishBtn, padding: '0.4rem 1rem', fontSize: '0.8rem' }}>
-                                                            Send to Chairman
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {/* Show feedback on this routine */}
-                                                {feedbackList.filter(f => f.target_announcement === r._id).length > 0 && (
-                                                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '8px', borderLeft: '3px solid #0ea5e9' }}>
-                                                        <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#0369a1', marginBottom: '0.4rem' }}>Peer Feedback:</div>
-                                                        {feedbackList.filter(f => f.target_announcement === r._id).map(f => (
-                                                            <div key={f._id} style={{ fontSize: '0.85rem', color: '#334155', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.3rem' }}>
-                                                                <div><strong>{f.from_user?.full_name || 'Anonymous'}:</strong> {f.message_content}</div>
-                                                                <button onClick={() => deleteFeedback(f._id)} style={s.deleteBtn}><FaTrash size={11} /></button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <button onClick={() => deleteRoutine(r._id)} style={s.deleteBtn}><FaTrash /></button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Published / Approved Routines */}
-                        <div style={s.outerCard}>
-                            <h2 style={s.sectionTitle}>Published Routine</h2>
-                            {publishedRoutines.length === 0 ? (
-                                <p style={{ color: '#94a3b8', textAlign: 'center', fontStyle: 'italic' }}>No published routines yet.</p>
-                            ) : publishedRoutines.map(r => (
-                                <div key={r._id} style={s.noticeCard}>
-                                    <h4 style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.3rem' }}>
-                                        {r.title} {r.author?._id !== user.id && <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: '0.85rem' }}>— by {r.author?.full_name}</span>}
-                                    </h4>
-                                    {r.content && <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 0.5rem' }}>{r.content}</p>}
-                                    {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={s.attachBtn}><FaPaperclip /> View Attached Document</a>}
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {/* ═══════ PROFILE TAB ═══════ */}
-                {activeTab === 'profile' && (
-                    <div style={s.outerCard}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                            <div>
-                                <h2 style={{ ...s.sectionTitle, marginBottom: '0.25rem' }}>Teacher Profile</h2>
-                                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>Manage your account details.</p>
-                            </div>
-                            {!editMode && <button onClick={() => { setEditData({ full_name: user.name, email: user.email, department: user.department || '' }); setEditMode(true); }} style={s.declineBtn}>Edit Profile</button>}
-                        </div>
-                        {editMode ? (
-                            <form onSubmit={updateProfile}>
-                                <div className="chairman-profile-grid" style={{ marginBottom: '1.5rem' }}>
-                                    <div><label style={s.label}>Full Name</label><input type="text" value={editData.full_name} onChange={e => setEditData({ ...editData, full_name: e.target.value })} style={s.input} /></div>
-                                    <div><label style={s.label}>Email Address</label><input type="email" value={editData.email} onChange={e => setEditData({ ...editData, email: e.target.value })} style={s.input} /></div>
-                                    <div><label style={s.label}>Department</label><input type="text" value={editData.department} onChange={e => setEditData({ ...editData, department: e.target.value })} style={s.input} /></div>
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                    <button type="submit" style={s.publishBtn}>Save Changes</button>
-                                    <button type="button" onClick={() => setEditMode(false)} style={s.declineBtn}>Cancel</button>
-                                </div>
-                            </form>
-                        ) : (
-                            <div className="chairman-profile-grid">
-                                <div style={s.profileCard}><label style={s.profileLabel}>Full Name</label><div style={s.profileValue}>{user.name}</div></div>
-                                <div style={s.profileCard}><label style={s.profileLabel}>Email Address</label><div style={s.profileValue}>{user.email}</div></div>
-                                <div style={s.profileCard}><label style={s.profileLabel}>Role</label><div style={s.profileValue}>{user.role}</div></div>
-                                <div style={s.profileCard}><label style={s.profileLabel}>Department</label><div style={s.profileValue}>{user.department || 'ICE'}</div></div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-        </Layout>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          height: "100vh",
+          alignItems: "center",
+        }}
+      >
+        <Loader />
+      </div>
     );
+  if (!user) return null;
+
+  // Group uploads by batch for My Uploads tab
+  const groupedDocs = myDocs.reduce((acc, doc) => {
+    const batchName = doc.target_batch?.batch_name || "General";
+    if (!acc[batchName]) acc[batchName] = [];
+    acc[batchName].push(doc);
+    return acc;
+  }, {});
+  const batchNames = Object.keys(groupedDocs);
+
+  // Routine helpers
+  const pendingRoutines = routines.filter(
+    (r) =>
+      (r.status === "PENDING_APPROVAL" || r.status === "PENDING_FEEDBACK") &&
+      r.author?._id === user.id,
+  );
+  const publishedRoutines = routines.filter((r) => r.status === "APPROVED");
+  // Routines from OTHER teachers that need peer review
+  const peerReviewRoutines = routines.filter(
+    (r) => r.status === "PENDING_FEEDBACK" && r.author?._id !== user.id,
+  );
+
+  return (
+    <Layout>
+      <div style={s.wrapper}>
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={closeConfirmModal}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          isDanger={confirmModal.isDanger}
+        />
+
+        {/* ═══════ ANNOUNCEMENTS TAB ═══════ */}
+        {activeTab === "announcement" && (
+          <div style={s.outerCard}>
+            <h2 style={s.sectionTitle}>Target Batch</h2>
+            <form onSubmit={handleClassUpdate}>
+              <div style={{ marginBottom: "1.25rem" }}>
+                <select
+                  value={selectedBatch}
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                  style={s.input}
+                >
+                  {batches.map((b) => (
+                    <option key={b._id} value={b._id}>
+                      {b.batch_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom: "1.25rem" }}>
+                <input
+                  name="title_display"
+                  placeholder="Title/Subject"
+                  style={s.input}
+                />
+              </div>
+              <div style={{ marginBottom: "1.25rem" }}>
+                <textarea
+                  name="message"
+                  placeholder="Message..."
+                  rows="4"
+                  style={s.textarea}
+                  required
+                ></textarea>
+              </div>
+              {msg && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "0.75rem",
+                    background: msg.includes("Success") ? "#dcfce7" : "#fee2e2",
+                    borderRadius: "8px",
+                    marginBottom: "1rem",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {msg}
+                </div>
+              )}
+              <button type="submit" style={s.submitBtn} disabled={loading}>
+                Send to Announcement
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ═══════ NEW UPLOAD TAB ═══════ */}
+        {activeTab === "new-upload" && (
+          <div style={s.outerCard}>
+            <h2 style={s.sectionTitle}>Target Batch</h2>
+            {msg && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "0.75rem",
+                  background: msg.includes("Success") ? "#dcfce7" : "#fee2e2",
+                  color: msg.includes("Success") ? "#166534" : "#991b1b",
+                  borderRadius: "8px",
+                  marginBottom: "1rem",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {msg}
+              </div>
+            )}
+            <form onSubmit={handleUpload}>
+              <div style={{ marginBottom: "1.25rem" }}>
+                <select
+                  value={selectedBatch}
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                  style={s.input}
+                >
+                  {batches.map((b) => (
+                    <option key={b._id} value={b._id}>
+                      {b.batch_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={s.label}>Select Document</label>
+                <div
+                  onClick={() => document.getElementById("resFile").click()}
+                  style={s.uploadZone}
+                >
+                  <div style={{ color: "#ea580c", marginBottom: "0.75rem" }}>
+                    <FaCloudUploadAlt size={48} />
+                  </div>
+                  {file ? (
+                    <div style={{ fontWeight: "600", color: "#1e293b" }}>
+                      {file.name}
+                    </div>
+                  ) : (
+                    <div style={{ color: "#1e293b", fontWeight: "600" }}>
+                      Click to browse file
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="resFile"
+                  type="file"
+                  onChange={(e) => setFile(e.target.files[0])}
+                  style={{ display: "none" }}
+                />
+              </div>
+              <button type="submit" style={s.submitBtn} disabled={loading}>
+                Upload Resource
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ═══════ MY UPLOADS TAB ═══════ */}
+        {activeTab === "my-uploads" && (
+          <div style={s.outerCard}>
+            {!openBatchFolder ? (
+              /* ── Batch Folder List ── */
+              batchNames.length === 0 ? (
+                <p style={{ color: "#94a3b8", textAlign: "center" }}>
+                  No uploads found.
+                </p>
+              ) : (
+                <div className="teacher-folder-grid">
+                  {batchNames.map((name) => (
+                    <div
+                      key={name}
+                      onClick={() => setOpenBatchFolder(name)}
+                      style={{ ...s.folderCard, cursor: "pointer" }}
+                    >
+                      <div style={{ color: "#f59e0b", marginBottom: "0.5rem" }}>
+                        <FaFolder size={40} />
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: "700",
+                          fontSize: "0.9rem",
+                          color: "#ea580c",
+                        }}
+                      >
+                        {name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#94a3b8",
+                          marginTop: "0.25rem",
+                        }}
+                      >
+                        {groupedDocs[name].length} file(s)
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              /* ── Documents inside a batch folder ── */
+              <>
+                <button
+                  onClick={() => setOpenBatchFolder(null)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    background: "none",
+                    border: "none",
+                    color: "#ea580c",
+                    fontWeight: "600",
+                    fontSize: "0.95rem",
+                    cursor: "pointer",
+                    marginBottom: "1.25rem",
+                    padding: 0,
+                  }}
+                >
+                  ← Back
+                </button>
+                <h3
+                  style={{
+                    fontWeight: "700",
+                    color: "#1e293b",
+                    fontSize: "1.1rem",
+                    marginBottom: "1.25rem",
+                  }}
+                >
+                  {openBatchFolder}
+                </h3>
+                {(groupedDocs[openBatchFolder] || []).length === 0 ? (
+                  <p
+                    style={{
+                      color: "#94a3b8",
+                      textAlign: "center",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    No files in this batch.
+                  </p>
+                ) : (
+                  <div className="teacher-folder-grid">
+                    {groupedDocs[openBatchFolder].map((doc) => (
+                      <div
+                        key={doc._id}
+                        style={{ ...s.folderCard, position: "relative" }}
+                      >
+                        <button
+                          onClick={() => deleteDoc(doc._id)}
+                          style={{
+                            ...s.deleteBtn,
+                            position: "absolute",
+                            top: "0.4rem",
+                            right: "0.4rem",
+                          }}
+                        >
+                          <FaTrash size={10} />
+                        </button>
+                        <a
+                          href={doc.file_path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: "none", color: "inherit" }}
+                        >
+                          <div style={{ marginBottom: "0.5rem" }}>
+                            {getFileIcon(doc.original_filename)}
+                          </div>
+                          <div
+                            style={{
+                              fontWeight: "600",
+                              fontSize: "0.85rem",
+                              color: "#ea580c",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {doc.original_filename}
+                          </div>
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ═══════ NOTICES TAB ═══════ */}
+        {activeTab === "notices" && (
+          <Notice
+            showNoticeForm={showNoticeForm}
+            setShowNoticeForm={setShowNoticeForm}
+            notices={notices}
+            openNotice={openNotice}
+            handleNoticeSubmit={handleNoticeSubmit}
+            user={user}
+            loading={loading}
+            noticeAudience={noticeAudience}
+            setNoticeAudience={setNoticeAudience}
+            fetchNotices={fetchNotices}
+          />
+        )}
+
+        {/* ═══════ ROUTINE TAB ═══════ */}
+        {activeTab === "routine" && (
+          <>
+            {/* Upload Routine */}
+            <div style={s.outerCard}>
+              <h2 style={s.sectionTitle}>Routine</h2>
+              <form onSubmit={(e) => e.preventDefault()}>
+                <div style={{ marginBottom: "1.25rem" }}>
+                  <textarea
+                    name="msg"
+                    id="routineMsg"
+                    placeholder="Routine Details / Message..."
+                    rows="3"
+                    style={s.textarea}
+                    required
+                  ></textarea>
+                </div>
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label style={s.label}>Select Document</label>
+                  <div
+                    onClick={() =>
+                      document.getElementById("routineFile").click()
+                    }
+                    style={s.uploadZone}
+                  >
+                    <div style={{ color: "#ea580c", marginBottom: "0.75rem" }}>
+                      <FaCloudUploadAlt size={48} />
+                    </div>
+                    {file ? (
+                      <div style={{ fontWeight: "600", color: "#1e293b" }}>
+                        {file.name}
+                      </div>
+                    ) : (
+                      <div style={{ color: "#1e293b", fontWeight: "600" }}>
+                        Click to browse file
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="routineFile"
+                    type="file"
+                    onChange={(e) => setFile(e.target.files[0])}
+                    style={{ display: "none" }}
+                    accept=".pdf,.doc,.docx,.jpg,.png"
+                  />
+                </div>
+                <div className="teacher-routine-btns">
+                  <button
+                    type="button"
+                    onClick={() => handleRoutineUpload("PENDING_FEEDBACK")}
+                    style={s.declineBtn}
+                    disabled={loading}
+                  >
+                    Request Peer Feedback
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRoutineUpload("PENDING_APPROVAL")}
+                    style={s.publishBtn}
+                    disabled={loading}
+                  >
+                    Send for Approval
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* ═══ PEER REVIEW SECTION — routines from other teachers ═══ */}
+            {peerReviewRoutines.length > 0 && (
+              <div style={s.outerCard}>
+                <h2 style={s.sectionTitle}>
+                  👥 Peer Review Requests
+                  <span
+                    style={{
+                      marginLeft: "0.75rem",
+                      background: "#fef3c7",
+                      color: "#b45309",
+                      fontSize: "0.75rem",
+                      fontWeight: "700",
+                      padding: "0.2rem 0.6rem",
+                      borderRadius: "999px",
+                    }}
+                  >
+                    {peerReviewRoutines.length} pending
+                  </span>
+                </h2>
+                <p
+                  style={{
+                    color: "#64748b",
+                    fontSize: "0.875rem",
+                    marginBottom: "1.25rem",
+                  }}
+                >
+                  Your colleagues have requested feedback on their routines
+                  before sending to the Chairman.
+                </p>
+
+                {peerReviewRoutines.map((r) => (
+                  <div
+                    key={r._id}
+                    style={{ ...s.noticeCard, borderLeft: "4px solid #f59e0b" }}
+                  >
+                    {/* Routine info */}
+                    <div style={{ marginBottom: "1rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          flexWrap: "wrap",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        <h4
+                          style={{
+                            fontWeight: "700",
+                            color: "#1e293b",
+                            margin: 0,
+                          }}
+                        >
+                          {r.title}
+                        </h4>
+                        <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                          by {r.author?.full_name} ·{" "}
+                          {new Date(r.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {r.content && (
+                        <p
+                          style={{
+                            color: "#475569",
+                            fontSize: "0.9rem",
+                            margin: "0.5rem 0",
+                          }}
+                        >
+                          {r.content}
+                        </p>
+                      )}
+                      {r.file_url && (
+                        <a
+                          href={r.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={s.attachBtn}
+                        >
+                          <FaPaperclip /> View Routine Document
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Feedback already given by others */}
+                    {feedbackList.filter((f) => f.target_announcement === r._id)
+                      .length > 0 && (
+                      <div
+                        style={{
+                          marginBottom: "1rem",
+                          padding: "0.75rem",
+                          background: "#f8fafc",
+                          borderRadius: "8px",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: "0.8rem",
+                            fontWeight: "600",
+                            color: "#475569",
+                            marginBottom: "0.5rem",
+                          }}
+                        >
+                          Feedback so far:
+                        </div>
+                        {feedbackList
+                          .filter((f) => f.target_announcement === r._id)
+                          .map((f) => (
+                            <div
+                              key={f._id}
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "#334155",
+                                marginBottom: "0.35rem",
+                              }}
+                            >
+                              <strong>
+                                {f.from_user?.full_name || "A colleague"}:
+                              </strong>{" "}
+                              {f.message_content}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+
+                    {/* Feedback input — hide if already submitted this session */}
+                    {peerFeedbackSent[r._id] ? (
+                      <div
+                        style={{
+                          padding: "0.75rem 1rem",
+                          background: "#dcfce7",
+                          borderRadius: "8px",
+                          color: "#166534",
+                          fontSize: "0.9rem",
+                          fontWeight: "500",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        ✓ Your feedback was submitted successfully.
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.75rem",
+                          alignItems: "flex-end",
+                        }}
+                      >
+                        <textarea
+                          rows="2"
+                          placeholder="Write your feedback for this routine..."
+                          value={peerFeedbackText[r._id] || ""}
+                          onChange={(e) =>
+                            setPeerFeedbackText((prev) => ({
+                              ...prev,
+                              [r._id]: e.target.value,
+                            }))
+                          }
+                          style={{
+                            ...s.textarea,
+                            flex: 1,
+                            marginBottom: 0,
+                            resize: "vertical",
+                            minHeight: "60px",
+                          }}
+                        />
+                        <button
+                          onClick={() => submitPeerFeedback(r._id)}
+                          disabled={
+                            peerFeedbackSending[r._id] ||
+                            !peerFeedbackText[r._id]?.trim()
+                          }
+                          style={{
+                            ...s.publishBtn,
+                            padding: "0.6rem 1.25rem",
+                            fontSize: "0.875rem",
+                            whiteSpace: "nowrap",
+                            opacity: !peerFeedbackText[r._id]?.trim() ? 0.5 : 1,
+                          }}
+                        >
+                          {peerFeedbackSending[r._id]
+                            ? "Sending..."
+                            : "✉ Submit"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pending Routine / Routine for Approval */}
+            {pendingRoutines.length > 0 && (
+              <div style={s.outerCard}>
+                <h2 style={s.sectionTitle}>⏳ Routine for Approval</h2>
+                {pendingRoutines.map((r) => (
+                  <div key={r._id} style={s.noticeCard}>
+                    <div className="chairman-card-row">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4
+                          style={{
+                            fontWeight: "700",
+                            color: "#1e293b",
+                            marginBottom: "0.3rem",
+                          }}
+                        >
+                          {r.title}
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              fontWeight: "normal",
+                              marginLeft: "0.5rem",
+                              padding: "0.2rem 0.5rem",
+                              borderRadius: "4px",
+                              background:
+                                r.status === "PENDING_FEEDBACK"
+                                  ? "#fef3c7"
+                                  : "#fed7aa",
+                              color:
+                                r.status === "PENDING_FEEDBACK"
+                                  ? "#b45309"
+                                  : "#c2410c",
+                            }}
+                          >
+                            {r.status.replace("_", " ")}
+                          </span>
+                        </h4>
+                        {r.content && (
+                          <p
+                            style={{
+                              color: "#64748b",
+                              fontSize: "0.9rem",
+                              margin: "0 0 0.5rem",
+                            }}
+                          >
+                            {r.content}
+                          </p>
+                        )}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.75rem",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                          }}
+                        >
+                          {r.file_url && (
+                            <a
+                              href={r.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={s.attachBtn}
+                            >
+                              <FaPaperclip /> View Attached Document
+                            </a>
+                          )}
+                          {r.status === "PENDING_FEEDBACK" && (
+                            <button
+                              onClick={() => sendToChairman(r._id)}
+                              style={{
+                                ...s.publishBtn,
+                                padding: "0.4rem 1rem",
+                                fontSize: "0.8rem",
+                              }}
+                            >
+                              Send to Chairman
+                            </button>
+                          )}
+                        </div>
+                        {/* Show feedback on this routine */}
+                        {feedbackList.filter(
+                          (f) => f.target_announcement === r._id,
+                        ).length > 0 && (
+                          <div
+                            style={{
+                              marginTop: "0.75rem",
+                              padding: "0.75rem",
+                              background: "#f0f9ff",
+                              borderRadius: "8px",
+                              borderLeft: "3px solid #0ea5e9",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "0.8rem",
+                                fontWeight: "600",
+                                color: "#0369a1",
+                                marginBottom: "0.4rem",
+                              }}
+                            >
+                              Peer Feedback:
+                            </div>
+                            {feedbackList
+                              .filter((f) => f.target_announcement === r._id)
+                              .map((f) => (
+                                <div
+                                  key={f._id}
+                                  style={{
+                                    fontSize: "0.85rem",
+                                    color: "#334155",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "flex-start",
+                                    marginBottom: "0.3rem",
+                                  }}
+                                >
+                                  <div>
+                                    <strong>
+                                      {f.from_user?.full_name || "Anonymous"}:
+                                    </strong>{" "}
+                                    {f.message_content}
+                                  </div>
+                                  <button
+                                    onClick={() => deleteFeedback(f._id)}
+                                    style={s.deleteBtn}
+                                  >
+                                    <FaTrash size={11} />
+                                  </button>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => deleteRoutine(r._id)}
+                        style={s.deleteBtn}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Published / Approved Routines */}
+            <div style={s.outerCard}>
+              <h2 style={s.sectionTitle}>Published Routine</h2>
+              {publishedRoutines.length === 0 ? (
+                <p
+                  style={{
+                    color: "#94a3b8",
+                    textAlign: "center",
+                    fontStyle: "italic",
+                  }}
+                >
+                  No published routines yet.
+                </p>
+              ) : (
+                publishedRoutines.map((r) => (
+                  <div key={r._id} style={s.noticeCard}>
+                    <h4
+                      style={{
+                        fontWeight: "700",
+                        color: "#1e293b",
+                        marginBottom: "0.3rem",
+                      }}
+                    >
+                      {r.title}{" "}
+                      {r.author?._id !== user.id && (
+                        <span
+                          style={{
+                            fontWeight: "normal",
+                            color: "#64748b",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          — by {r.author?.full_name}
+                        </span>
+                      )}
+                    </h4>
+                    {r.content && (
+                      <p
+                        style={{
+                          color: "#64748b",
+                          fontSize: "0.9rem",
+                          margin: "0 0 0.5rem",
+                        }}
+                      >
+                        {r.content}
+                      </p>
+                    )}
+                    {r.file_url && (
+                      <a
+                        href={r.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={s.attachBtn}
+                      >
+                        <FaPaperclip /> View Attached Document
+                      </a>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ═══════ PROFILE TAB ═══════ */}
+        {activeTab === "profile" && (
+          <div style={s.outerCard}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "2rem",
+                flexWrap: "wrap",
+                gap: "1rem",
+              }}
+            >
+              <div>
+                <h2 style={{ ...s.sectionTitle, marginBottom: "0.25rem" }}>
+                  Teacher Profile
+                </h2>
+                <p style={{ color: "#64748b", fontSize: "0.9rem", margin: 0 }}>
+                  Manage your account details.
+                </p>
+              </div>
+              {!editMode && (
+                <button
+                  onClick={() => {
+                    setEditData({
+                      full_name: user.name,
+                      email: user.email,
+                      department: user.department || "",
+                    });
+                    setEditMode(true);
+                  }}
+                  style={s.declineBtn}
+                >
+                  Edit Profile
+                </button>
+              )}
+            </div>
+            {editMode ? (
+              <form onSubmit={updateProfile}>
+                <div
+                  className="chairman-profile-grid"
+                  style={{ marginBottom: "1.5rem" }}
+                >
+                  <div>
+                    <label style={s.label}>Full Name</label>
+                    <input
+                      type="text"
+                      value={editData.full_name}
+                      onChange={(e) =>
+                        setEditData({ ...editData, full_name: e.target.value })
+                      }
+                      style={s.input}
+                    />
+                  </div>
+                  <div>
+                    <label style={s.label}>Email Address</label>
+                    <input
+                      type="email"
+                      value={editData.email}
+                      onChange={(e) =>
+                        setEditData({ ...editData, email: e.target.value })
+                      }
+                      style={s.input}
+                    />
+                  </div>
+                  <div>
+                    <label style={s.label}>Department</label>
+                    <input
+                      type="text"
+                      value={editData.department}
+                      onChange={(e) =>
+                        setEditData({ ...editData, department: e.target.value })
+                      }
+                      style={s.input}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                  <button type="submit" style={s.publishBtn}>
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditMode(false)}
+                    style={s.declineBtn}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="chairman-profile-grid">
+                <div style={s.profileCard}>
+                  <label style={s.profileLabel}>Full Name</label>
+                  <div style={s.profileValue}>{user.name}</div>
+                </div>
+                <div style={s.profileCard}>
+                  <label style={s.profileLabel}>Email Address</label>
+                  <div style={s.profileValue}>{user.email}</div>
+                </div>
+                <div style={s.profileCard}>
+                  <label style={s.profileLabel}>Role</label>
+                  <div style={s.profileValue}>{user.role}</div>
+                </div>
+                <div style={s.profileCard}>
+                  <label style={s.profileLabel}>Department</label>
+                  <div style={s.profileValue}>{user.department || "ICE"}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {/* Notice Detail Popup */}
+      {selectedNotice && (
+        <NoticeDetail
+          selectedNotice={selectedNotice}
+          closeNotice={closeNotice}
+        />
+      )}
+    </Layout>
+  );
 };
 
 export default TeacherDashboard;

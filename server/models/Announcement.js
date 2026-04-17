@@ -7,7 +7,7 @@ const AnnouncementSchema = new mongoose.Schema({
     target_batch: { type: mongoose.Schema.Types.ObjectId, ref: 'Batch', default: null }, // Null = Global/Department Notice
     type: { type: String, enum: ['NOTICE', 'ANNOUNCEMENT', 'ROUTINE'], required: true },
     status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED', 'PENDING_FEEDBACK', 'PENDING_APPROVAL'], default: 'PENDING' },
-    target_audience: { type: String, enum: ['Student', 'Teacher', 'Everyone'], default: 'All' },
+    target_audience: { type: String, enum: ['Student', 'Teacher', 'Everyone'], default: 'Everyone' },
     feedback: { type: String, default: '' },
     file_url: { type: String, default: null }, // URL for attached PDF/File
     created_at: { type: Date, default: Date.now }

@@ -245,6 +245,187 @@ app.listen(PORT, () => console.log(`Mock Server running on ${PORT}`));
 
 // End of file
 
+// Start of: ./server\reset_system.js
+const mongoose = require('./node_modules/mongoose');
+const dotenv = require('dotenv');
+const cloudinary = require('cloudinary').v2;
+const path = require('path');
+
+// Load env vars
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Config Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const resetSystem = async () => {
+    try {
+        console.log('⚠ WARNING: This will DELETE ALL DATA from MongoDB and Cloudinary!');
+        console.log('Starting in 3 seconds... (Ctrl+C to cancel)');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // 1. Connect to DB
+        console.log('Connecting to MongoDB...');
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB Connected.');
+
+        // 2. Clear Database
+        console.log('Dropping MongoDB database...');
+        await mongoose.connection.dropDatabase();
+        console.log('✔ MongoDB database dropped successfully.');
+
+        // 3. Clear Cloudinary
+        console.log('Clearing Cloudinary resources...');
+
+        // Delete all resources (images, raw, video)
+        // api.delete_all_resources() helps but we might need to specify types
+        // This deletes everything in the account or derived resources
+
+        try {
+            const result = await cloudinary.api.delete_all_resources();
+            console.log('- Default resources cleared:', result);
+
+            // Also need to clear raw files (PDFs often stored as raw or auto)
+            const resultRaw = await cloudinary.api.delete_all_resources({ resource_type: 'raw' });
+            console.log('- Raw resources cleared:', resultRaw);
+
+            // Also clear video if any
+            const resultVideo = await cloudinary.api.delete_all_resources({ resource_type: 'video' });
+            console.log('- Video resources cleared:', resultVideo);
+
+            // Force delete folders? Cloudinary folders are virtual, they disappear when empty,
+            // but empty folders might remain in listing. We can assume they are gone if files are gone.
+            // But let's try to delete the main folder 'uni_connect_documents' if empty just in case?
+            // Usually not strictly necessary for "wiping data".
+
+        } catch (cloudErr) {
+            console.error('❌ Cloudinary Wipe Error:', cloudErr.message);
+            console.log('Note: You might need Admin API enabled in Cloudinary settings.');
+        }
+
+        console.log('✔ System Reset Complete.');
+        process.exit(0);
+
+    } catch (err) {
+        console.error('FATAL ERROR:', err);
+        process.exit(1);
+    }
+};
+
+resetSystem();
+
+// End of file
+
+// Start of: ./server\seed_data.js
+const mongoose = require('mongoose')
+const bcrypt = require('bcryptjs');
+const dotenv = require('dotenv');
+const path = require('path');
+
+// Load env vars
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Load Models
+const User = require('./models/User');
+const Batch = require('./models/Batch');
+const seedData = async () => {
+    try {
+        console.log('🌱 Seeding Dummy Data...');
+        console.log('Connecting to MongoDB...');
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB Connected.');
+
+        // 1. Create Chairman
+        const salt = await bcrypt.genSalt(10);
+        const hashedChairmanPassword = await bcrypt.hash('password123', salt);
+
+        const chairman = await User.create({
+            full_name: 'Chairman User',
+            email: 'chairman@gmail.com',
+            password: hashedChairmanPassword,
+            role: 'CHAIRMAN',
+            department: 'ICE'
+        });
+        console.log('✔ Created Chairman: chairman@gmail.com / password123');
+
+        // 3. Create Computer Operator
+        const hashedComputerOperatorPassword = await bcrypt.hash('password123', salt);
+        const computerOperator = await User.create({
+            full_name: 'Babu',
+            email: 'babu@gmail.com',
+            password: hashedComputerOperatorPassword,
+            role: 'COMPUTER_OPERATOR',
+            department: 'ICE'
+        });
+        console.log('✔ Created Computer Operator: babu@gmail.com / password123');
+
+        // 2. Create Batch (by Computer Operator)
+        // Batch passwords are usually plain text in this specific app based on previous context 
+        // (or hashed? Model ref says just String. Let's assume plain or handle consistently.
+        // Wait, verifying Batch.js: batch_password is required. 
+        // In verify_chairman.js or similar, checking if it is hashed usually.
+        // Let's hash it to be safe as it authentication related, or check logic.
+        // Actually, let's look at how batch is created in routes usually. 
+        // Assuming plain for now to ensure simplicity or hashing if auth uses bcrypt compare.
+        // Let's hash it standardly.)
+        const hashedBatchPassword = await bcrypt.hash('password123', salt);
+
+        const batch1 = await Batch.create({
+            batch_name: 'ICE-21-TEST',
+            batch_username: 'ice21test',
+            batch_password: hashedBatchPassword,
+            created_by: computerOperator._id
+        });
+        console.log('✔ Created Batch: ICE-21-TEST (user: ice21test / pass: password123)');
+        const batch2 = await Batch.create({
+            batch_name: 'ICE-22-TEST',
+            batch_username: 'ice22test',
+            batch_password: hashedBatchPassword,
+            created_by: computerOperator._id
+        });
+        console.log('✔ Created Batch: ICE-22-TEST (user: ice22test / pass: password123)');
+
+        // 3. Create Teacher
+        const hashedTeacherPassword = await bcrypt.hash('password123', salt);
+        const teacher = await User.create({
+            full_name: 'Shanto Islam',
+            email: 'shanto@gmail.com',
+            password: hashedTeacherPassword,
+            role: 'TEACHER',
+            department: 'ICE'
+        });
+        console.log('✔ Created Teacher: shanto@gmail.com / password123');
+
+        // 4. Create another Teacher (Acting as CC) ? 
+        // Optional, but user asked for "some dummy...". Let's update `seed_data` to be robust.
+
+        console.log('\nSeed Complete! 🚀');
+        console.log('------------------------------------------------');
+        console.log('Chairman Login: chairman@gmail.com / password123');
+        console.log('Teacher Login:  shanto@gmail.com / password123');
+        console.log('Computer Operator Login: babu@gmail.com / password123');
+        console.log('Batch Login:    ice21test            / password123');
+        console.log('Batch Login:    ice22test            / password123');
+        console.log('------------------------------------------------');
+
+        process.exit(0);
+    } catch (err) {
+        if (err.code === 11000) {
+            console.log('⚠ Data already exists! (Duplicate Key Error)');
+            console.log('Run `npm run reset-system` first if you want a fresh start.');
+            process.exit(0);
+        }
+        console.error('Seeding Failed:', err);
+        process.exit(1);
+    }
+};
+seedData();
+
+// End of file
+
 // Start of: ./server\seed_users_for_verification.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -473,6 +654,7 @@ const AnnouncementSchema = new mongoose.Schema({
     target_batch: { type: mongoose.Schema.Types.ObjectId, ref: 'Batch', default: null }, // Null = Global/Department Notice
     type: { type: String, enum: ['NOTICE', 'ANNOUNCEMENT', 'ROUTINE'], required: true },
     status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED', 'PENDING_FEEDBACK', 'PENDING_APPROVAL'], default: 'PENDING' },
+    target_audience: { type: String, enum: ['Student', 'Teacher', 'Everyone'], default: 'Everyone' },
     feedback: { type: String, default: '' },
     file_url: { type: String, default: null }, // URL for attached PDF/File
     created_at: { type: Date, default: Date.now }
@@ -591,26 +773,26 @@ const upload = multer({
     }
 });
 
-// @route   GET api/announcements/public
-// @desc    Get all public notices (for Home Page)
-// @access  Public
-router.get('/public', async (req, res) => {
-    try {
-        const notices = await Announcement.find({ type: 'NOTICE', status: 'APPROVED' })
-            .populate('author', 'full_name role')
-            .sort({ created_at: -1 })
-            .limit(10); // Limit to latest 10
-        res.json(notices);
-    } catch (err) {
-        res.status(500).json({ msg: 'Server Error' });
-    }
-});
+// // @route   GET api/announcements/public
+// // @desc    Get all public notices (for Home Page)
+// // @access  Public
+// router.get('/public', async (req, res) => {
+//     try {
+//         const notices = await Announcement.find({ type: 'NOTICE', status: 'APPROVED' })
+//             .populate('author', 'full_name role')
+//             .sort({ created_at: -1 })
+//             .limit(10); // Limit to latest 10 notices for homepage display
+//         res.json(notices);
+//     } catch (err) {
+//         res.status(500).json({ msg: 'Server Error' });
+//     }
+// });
 
 // @route   POST api/announcements
 // @desc    Create a notice or announcement
 // @access  Chairman, Operator, CC, Teacher
 router.post('/', auth, upload.single('file'), async (req, res) => {
-    const { title, content, target_batch, type } = req.body;
+    const { title, content, target_batch, type, target_audience } = req.body;
     const { role } = req.user;
 
     // Permission Check
@@ -662,10 +844,16 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
             status = 'PENDING_APPROVAL';
         }
 
+        const allowedAudience = ['Teacher', 'Student', 'Everyone'];
+        const normalizedAudience = allowedAudience.includes(target_audience)
+            ? target_audience
+            : 'Everyone';
+
         const newAnnouncement = new Announcement({
             title,
             content,
             author: req.user.id,
+            target_audience: normalizedAudience,
             target_batch: target_batch || null,
             type,
             file_url,
@@ -1100,7 +1288,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Get all batches
 // @access  Staff
 router.get('/', auth, async (req, res) => {
-    if (!['COORDINATOR', 'TEACHER', 'CHAIRMAN', 'CC'].includes(req.user.role)) {
+    if (!['COORDINATOR', 'TEACHER', 'CHAIRMAN', 'CC', 'COMPUTER_OPERATOR'].includes(req.user.role)) {
         return res.status(403).json({ msg: 'Access denied' });
     }
 
@@ -1217,7 +1405,9 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
 
         const result = await cloudinary.uploader.upload(dataURI, {
             public_id: finalPublicId,
-            resource_type: resourceType
+            resource_type: resourceType,
+            access_mode: 'public', // এটি নিশ্চিত করে ফাইলটি পাবলিক হবে
+            type: 'upload'         // পাবলিক ফাইলের জন্য টাইপ সবসময় 'upload' হয়
         });
 
         console.log('[DocUpload] Success:', result.secure_url);
