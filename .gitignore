@@ -8,7 +8,7 @@ server/.env
 *.env
 .env.test.local
 .env.production.local
-
+./outdated
 # Logs
 npm-debug.log*
 yarn-debug.log*
