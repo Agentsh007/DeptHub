@@ -10,6 +10,13 @@ const AnnouncementSchema = new mongoose.Schema({
     target_audience: { type: String, enum: ['Student', 'Teacher', 'Everyone'], default: 'Everyone' },
     feedback: { type: String, default: '' },
     file_url: { type: String, default: null }, // URL for attached PDF/File
+
+    // NEW: Structured timetable for Routine Builder
+    timetable: {
+        type: Object,           // JSON object containing the full grid
+        default: null
+    },
+
     created_at: { type: Date, default: Date.now }
 });
 

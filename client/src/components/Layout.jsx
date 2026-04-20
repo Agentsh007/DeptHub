@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { FaGraduationCap, FaSignOutAlt, FaCircle } from 'react-icons/fa';
+import { FaGraduationCap, FaSignOutAlt, FaCircle, FaBullhorn, FaCloudUploadAlt, FaFolder, FaCalendarAlt, FaUser, FaHome, FaLayerGroup, FaComments, FaEye, FaBell, FaFileAlt } from 'react-icons/fa';
 
 export const Header = () => {
     const { user, logout } = useContext(AuthContext);
@@ -78,119 +78,137 @@ export const Header = () => {
 
     const showLoginButtons = !user && (!isHeroVisible || location.pathname !== '/');
 
-    const getLinkStyle = (tabName) => ({
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '1rem',
-        fontWeight: '500',
-        color: activeTab === tabName ? 'var(--primary)' : 'var(--text-main)',
-        borderBottom: activeTab === tabName ? '2px solid var(--primary)' : '2px solid transparent',
-        paddingBottom: '2px',
-        transition: 'all 0.2s'
+    // ── Compact pill-style nav ──
+    const pillStyle = (tabName) => ({
+        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+        height: '34px', padding: '0 0.75rem',
+        borderRadius: '8px', border: 'none', cursor: 'pointer',
+        fontSize: '0.82rem', fontWeight: '600',
+        fontFamily: "'Inter', system-ui, sans-serif",
+        background: activeTab === tabName ? '#ea580c' : 'transparent',
+        color: activeTab === tabName ? 'white' : '#475569',
+        transition: 'all 0.15s ease', whiteSpace: 'nowrap',
     });
+
+    const hdrStyle = {
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '0 1.25rem', height: '56px',
+        background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #e2e8f0',
+        position: 'sticky', top: 0, zIndex: 100,
+    };
 
     return (
         <>
-            <header className="glass-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
-                <div className="logo-area" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ background: 'var(--primary-fade)', padding: '0.4rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <FaGraduationCap size={28} color="var(--primary)" />
+            <header className="glass-header" style={hdrStyle}>
+                {/* Logo */}
+                <div className="logo-area" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                    <div style={{ background: '#fff7ed', padding: '0.3rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FaGraduationCap size={22} color="#ea580c" />
                     </div>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', margin: 0, letterSpacing: '-0.5px' }}>DeptHub</h1>
+                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#ea580c', letterSpacing: '-0.5px' }}>DeptHub</span>
                 </div>
 
-                {/* Desktop Nav */}
-                <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }} className="desktop-nav">
+                {/* Desktop Nav - Center */}
+                <nav style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }} className="desktop-nav">
                     {user?.role === 'BATCH' ? (
                         <>
-                            <button onClick={() => navigate('/batch?tab=folders')} className={activeTab === 'folders' ? '' : 'nav-link'} style={getLinkStyle('folders')}>Faculty Folders</button>
-                            <button onClick={() => navigate('/batch?tab=notices')} className={activeTab === 'notices' ? '' : 'nav-link'} style={getLinkStyle('notices')}>Notices</button>
-                            <button onClick={() => navigate('/batch?tab=updates')} className={activeTab === 'updates' ? '' : 'nav-link'} style={getLinkStyle('updates')}>Class Updates</button>
-                            <button onClick={() => navigate('/batch?tab=routine')} className={activeTab === 'routine' ? '' : 'nav-link'} style={getLinkStyle('routine')}>Routine</button>
-                            <button onClick={() => navigate('/batch?tab=feedback')} className={activeTab === 'feedback' ? '' : 'nav-link'} style={getLinkStyle('feedback')}>Feedback</button>
+                            <button onClick={() => navigate('/batch?tab=folders')} style={pillStyle('folders')}>Folders</button>
+                            <button onClick={() => navigate('/batch?tab=notices')} style={pillStyle('notices')}>Notices</button>
+                            <button onClick={() => navigate('/batch?tab=updates')} style={pillStyle('updates')}>Updates</button>
+                            <button onClick={() => navigate('/batch?tab=routine')} style={pillStyle('routine')}>Routine</button>
+                            <button onClick={() => navigate('/batch?tab=feedback')} style={pillStyle('feedback')}>Feedback</button>
                         </>
                     ) : user?.role === 'TEACHER' ? (
                         <>
-                            <button onClick={() => navigate('/teacher?tab=announcement')} className={activeTab === 'announcement' ? '' : 'nav-link'} style={getLinkStyle('announcement')}>Announcements</button>
-                            <button onClick={() => navigate('/teacher?tab=new-upload')} className={activeTab === 'new-upload' ? '' : 'nav-link'} style={getLinkStyle('new-upload')}>New Upload</button>
-                            <button onClick={() => navigate('/teacher?tab=my-uploads')} className={activeTab === 'my-uploads' ? '' : 'nav-link'} style={getLinkStyle('my-uploads')}>My Upload</button>
-                            <button onClick={() => navigate('/teacher?tab=notices')} className={activeTab === 'notices' ? '' : 'nav-link'} style={getLinkStyle('notices')}>Notices</button>
-                            <button onClick={() => navigate('/teacher?tab=routine')} className={activeTab === 'routine' ? '' : 'nav-link'} style={getLinkStyle('routine')}>Routine</button>
+                            <button onClick={() => navigate('/teacher?tab=announcement')} style={pillStyle('announcement')}>Announce</button>
+                            <button onClick={() => navigate('/teacher?tab=new-upload')} style={pillStyle('new-upload')}>Upload</button>
+                            <button onClick={() => navigate('/teacher?tab=my-uploads')} style={pillStyle('my-uploads')}>Files</button>
+                            <button onClick={() => navigate('/teacher?tab=notices')} style={pillStyle('notices')}>Notices</button>
+                            <button onClick={() => navigate('/teacher?tab=routine')} style={pillStyle('routine')}>Routine</button>
                         </>
                     ) : user?.role === 'CHAIRMAN' ? (
                         <>
-                            <button onClick={() => navigate('/chairman?tab=notices')} className={activeTab === 'notices' ? '' : 'nav-link'} style={getLinkStyle('notices')}>Notices</button>
-                            <button onClick={() => navigate('/chairman?tab=routine')} className={activeTab === 'routine' ? '' : 'nav-link'} style={getLinkStyle('routine')}>Routine</button>
-                            <button onClick={() => navigate('/chairman?tab=feedback')} className={activeTab === 'feedback' ? '' : 'nav-link'} style={getLinkStyle('feedback')}>Feedback</button>
+                            <button onClick={() => navigate('/chairman?tab=notices')} style={pillStyle('notices')}>Notices</button>
+                            <button onClick={() => navigate('/chairman?tab=routine')} style={pillStyle('routine')}>Routine</button>
+                            <button onClick={() => navigate('/chairman?tab=feedback')} style={pillStyle('feedback')}>Feedback</button>
+                            <button onClick={() => navigate('/chairman?tab=supervision')} style={pillStyle('supervision')}>Supervision</button>
                         </>
                     ) : user?.role === 'COMPUTER_OPERATOR' ? (
                         <>
-                            <button onClick={() => navigate('/operator?tab=home')} className={activeTab === 'home' ? '' : 'nav-link'} style={getLinkStyle('home')}>Home</button>
-                            <button onClick={() => navigate('/operator?tab=notices')} className={activeTab === 'notices' ? '' : 'nav-link'} style={getLinkStyle('notices')}>Notices</button>
-                            <button onClick={() => navigate('/operator?tab=routine')} className={activeTab === 'routine' ? '' : 'nav-link'} style={getLinkStyle('routine')}>Routine</button>
-                            <button onClick={() => navigate('/operator?tab=batch')} className={activeTab === 'batch' ? '' : 'nav-link'} style={getLinkStyle('batch')}>Batch</button>
+                            <button onClick={() => navigate('/operator?tab=home')} style={pillStyle('home')}>Home</button>
+                            <button onClick={() => navigate('/operator?tab=notices')} style={pillStyle('notices')}>Notices</button>
+                            <button onClick={() => navigate('/operator?tab=routine')} style={pillStyle('routine')}>Routine</button>
+                            <button onClick={() => navigate('/operator?tab=batch')} style={pillStyle('batch')}>Batch</button>
                         </>
                     ) : (
                         <>
-                            <button onClick={() => scrollToSection('home-hero')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', color: 'var(--text-main)' }}>Home</button>
-                            <button onClick={() => scrollToSection('services')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', color: 'var(--text-main)' }}>Services</button>
-                            <button onClick={() => scrollToSection('contact')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', color: 'var(--text-main)' }}>Contact</button>
+                            <button onClick={() => scrollToSection('home-hero')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', color: '#475569', padding: '0.4rem 0.6rem' }}>Home</button>
+                            <button onClick={() => scrollToSection('services')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', color: '#475569', padding: '0.4rem 0.6rem' }}>Services</button>
+                            <button onClick={() => scrollToSection('contact')} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', color: '#475569', padding: '0.4rem 0.6rem' }}>Contact</button>
                         </>
                     )}
                 </nav>
 
-                <div className="user-area" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* Right: User Area */}
+                <div className="user-area" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                     {/* Hamburger for Mobile */}
                     <button
                         className="mobile-toggle"
                         onClick={toggleMenu}
-                        style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: 'var(--text-main)' }}
+                        style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: '#1e293b', padding: '0.25rem' }}
                     >
                         ☰
                     </button>
 
-                    <div className="desktop-auth" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div className="desktop-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {user ? (
                             <>
                                 <div
                                     onClick={goToProfile}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.4rem 0.8rem 0.4rem 1rem', borderRadius: '50px', transition: 'all 0.2s', background: 'var(--input-bg)', border: '1px solid #e2e8f0' }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer',
+                                        padding: '0.25rem 0.5rem 0.25rem 0.75rem', borderRadius: '50px',
+                                        transition: 'all 0.15s', border: '1px solid #e2e8f0',
+                                    }}
                                     className="user-profile-trigger"
                                 >
-                                    {/* ... profile content ... */}
                                     <div style={{ textAlign: 'right', lineHeight: '1.2' }}>
-                                        <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-main)' }}>{user.name}</div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{user.role ? user.role.toLowerCase() : ''}</div>
+                                        <div style={{ fontWeight: '600', fontSize: '0.8rem', color: '#1e293b' }}>{user.name}</div>
+                                        <div style={{ fontSize: '0.68rem', color: '#94a3b8', textTransform: 'capitalize' }}>{user.role ? user.role.toLowerCase().replace('_', ' ') : ''}</div>
                                     </div>
-                                    <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1rem', boxShadow: '0 2px 5px rgba(249, 115, 22, 0.3)' }}>
+                                    <div style={{
+                                        width: '32px', height: '32px', borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: 'white', fontWeight: 'bold', fontSize: '0.85rem',
+                                    }}>
                                         {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                     </div>
                                 </div>
-
                                 <button
                                     onClick={logout}
                                     style={{
-                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                        padding: '0.5rem 1rem', borderRadius: '50px',
+                                        display: 'flex', alignItems: 'center', gap: '0.35rem',
+                                        padding: '0.35rem 0.7rem', borderRadius: '8px',
                                         background: '#fef2f2', color: '#ef4444',
-                                        border: '1px solid #fee2e2', fontWeight: '600',
-                                        fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s'
+                                        border: '1px solid #fecaca', fontWeight: '600',
+                                        fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.15s',
                                     }}
                                     onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
                                 >
-                                    <FaSignOutAlt size={14} />
+                                    <FaSignOutAlt size={12} />
                                     <span>Logout</span>
                                 </button>
                             </>
                         ) : (
-                            <div style={{ display: 'flex', gap: '0.5rem', opacity: showLoginButtons ? 1 : 0, pointerEvents: showLoginButtons ? 'auto' : 'none', transition: 'opacity 0.3s ease' }}>
-                                <button onClick={() => navigate('/staff-login')} className="btn-secondary">
+                            <div style={{ display: 'flex', gap: '0.35rem', opacity: showLoginButtons ? 1 : 0, pointerEvents: showLoginButtons ? 'auto' : 'none', transition: 'opacity 0.3s ease' }}>
+                                <button onClick={() => navigate('/staff-login')} className="btn-secondary" style={{ height: '32px', fontSize: '0.78rem', padding: '0 0.75rem' }}>
                                     Faculty
                                 </button>
-                                <button onClick={() => navigate('/batch-login')} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                                    Student Login
+                                <button onClick={() => navigate('/batch-login')} className="btn-primary" style={{ height: '32px', fontSize: '0.78rem', padding: '0 0.75rem' }}>
+                                    Student
                                 </button>
                             </div>
                         )}
@@ -221,6 +239,7 @@ export const Header = () => {
                         <button onClick={() => { setIsMobileMenuOpen(false); navigate('/chairman?tab=notices'); }} className="mobile-nav-link">Notices</button>
                         <button onClick={() => { setIsMobileMenuOpen(false); navigate('/chairman?tab=routine'); }} className="mobile-nav-link">Routine</button>
                         <button onClick={() => { setIsMobileMenuOpen(false); navigate('/chairman?tab=feedback'); }} className="mobile-nav-link">Feedback</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); navigate('/chairman?tab=supervision'); }} className="mobile-nav-link">Supervision</button>
                     </>
                 ) : user?.role === 'COMPUTER_OPERATOR' ? (
                     <>
@@ -236,15 +255,15 @@ export const Header = () => {
                         <button onClick={() => scrollToSection('contact')} className="mobile-nav-link">Contact</button>
                     </>
                 )}
-                <div style={{ width: '80%', height: '1px', background: '#e2e8f0', margin: '1rem 0' }}></div>
+                <div style={{ width: '80%', height: '1px', background: '#e2e8f0', margin: '0.5rem 0' }}></div>
                 {!user && (
                     <>
-                        <button onClick={() => { setIsMobileMenuOpen(false); navigate('/batch-login'); }} className="btn-primary" style={{ width: '80%', padding: '1rem' }}>Student Login</button>
-                        <button onClick={() => { setIsMobileMenuOpen(false); navigate('/staff-login'); }} className="btn-secondary" style={{ width: '80%', padding: '1rem', marginTop: '1rem' }}>Faculty Login</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); navigate('/batch-login'); }} className="btn-primary" style={{ width: '80%', height: '40px' }}>Student Login</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); navigate('/staff-login'); }} className="btn-secondary" style={{ width: '80%', height: '40px', marginTop: '0.5rem' }}>Faculty Login</button>
                     </>
                 )}
                 {user && (
-                    <button onClick={goToProfile} className="mobile-nav-link" style={{ color: 'var(--primary)' }}>Go to Dashboard</button>
+                    <button onClick={goToProfile} className="mobile-nav-link" style={{ color: '#ea580c' }}>Go to Dashboard</button>
                 )}
             </div>
         </>
@@ -253,20 +272,24 @@ export const Header = () => {
 
 
 export const Footer = () => (
-    <footer className="glass-footer" style={{ padding: '2rem', textAlign: 'center', background: 'var(--bg-secondary)', borderTop: '1px solid #e2e8f0' }}>
-        <p style={{ color: 'var(--text-dim)' }}>© 2026 UniResource Platform. All rights reserved.</p>
-        <div className="status-indicator" title="System Operational" style={{ justifyContent: 'center', marginTop: '0.5rem' }}>
-            <FaCircle size={10} color="#22c55e" />
-            <span>Systems Online</span>
+    <footer style={{
+        padding: '0.75rem 1.25rem', textAlign: 'center',
+        background: 'white', borderTop: '1px solid #e2e8f0',
+        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem',
+    }}>
+        <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: 0 }}>© 2026 DeptHub · University Platform</p>
+        <div className="status-indicator" title="System Operational">
+            <FaCircle size={7} color="#22c55e" />
+            <span style={{ fontSize: '0.72rem' }}>Online</span>
         </div>
     </footer>
 );
 
 export const Layout = ({ children }) => {
     return (
-        <div className="app-layout">
+        <div className="app-layout" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Header />
-            <main className="main-content fade-in" style={{ width: '100%', maxWidth: '100%', margin: 0, padding: 0 }}>
+            <main className="main-content fade-in" style={{ flex: 1, width: '100%', maxWidth: '100%', margin: 0, padding: 0 }}>
                 {children}
             </main>
             <Footer />

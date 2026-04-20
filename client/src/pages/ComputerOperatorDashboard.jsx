@@ -178,7 +178,7 @@ const ComputerOperatorDashboard = () => {
 
     return (
         <Layout>
-            <div className="container" style={{ maxWidth: '1000px', paddingBottom: '4rem' }}>
+            <div className="container" style={{ maxWidth: '1100px', paddingBottom: '3rem', padding: '0.75rem' }}>
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
                 <ConfirmModal
                     isOpen={confirmModal.isOpen}
@@ -189,32 +189,28 @@ const ComputerOperatorDashboard = () => {
                     isDanger={confirmModal.isDanger}
                 />
 
-                <header style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                    <h1 style={{ color: 'var(--primary)', fontSize: '2rem', marginBottom: '0.5rem' }}>Computer Operator</h1>
-                    <p style={{ color: 'var(--text-dim)' }}>Manage Dept. Notices, Routines & Batches</p>
-                </header>
-
-                <div className="glass-panel fade-in" style={{ minHeight: '500px' }}>
+                <div className="glass-panel fade-in" style={{ minHeight: '400px' }}>
 
                     {/* HOME TAB */}
                     {activeTab === 'home' && (
-                        <div style={{ textAlign: 'center', padding: '2rem' }}>
-                            <h2 style={{ marginBottom: '1.5rem', color: 'var(--text-main)' }}>Welcome, {user.name}</h2>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-                                <div onClick={() => navigate('?tab=notices')} className="interactive-card" style={{ padding: '2rem', cursor: 'pointer', textAlign: 'center', background: '#fffbeb', border: '1px solid #fcd34d' }}>
-                                    <FaBullhorn size={40} color="#f59e0b" style={{ marginBottom: '1rem' }} />
-                                    <h3>Notices</h3>
-                                    <p style={{ color: 'var(--text-dim)' }}>Manage General Notices</p>
+                        <div style={{ padding: '1.25rem 0.5rem' }}>
+                            <h2 style={{ marginBottom: '0.75rem', color: 'var(--text-main)', fontSize: '1.1rem' }}>Welcome, {user.name}</h2>
+                            <p style={{ color: 'var(--text-dim)', fontSize: '0.82rem', marginBottom: '1rem' }}>Manage department notices, routines & batches</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.75rem' }}>
+                                <div onClick={() => navigate('?tab=notices')} className="interactive-card" style={{ padding: '1.25rem', cursor: 'pointer', textAlign: 'center', background: '#fffbeb', border: '1px solid #fcd34d' }}>
+                                    <FaBullhorn size={28} color="#f59e0b" style={{ marginBottom: '0.5rem' }} />
+                                    <h3 style={{ fontSize: '0.9rem' }}>Notices</h3>
+                                    <p style={{ color: 'var(--text-dim)', fontSize: '0.78rem' }}>Manage Notices</p>
                                 </div>
-                                <div onClick={() => navigate('?tab=routine')} className="interactive-card" style={{ padding: '2rem', cursor: 'pointer', textAlign: 'center', background: '#eff6ff', border: '1px solid #bfdbfe' }}>
-                                    <FaCalendarAlt size={40} color="#3b82f6" style={{ marginBottom: '1rem' }} />
-                                    <h3>Routines</h3>
-                                    <p style={{ color: 'var(--text-dim)' }}>Manage Class Routines</p>
+                                <div onClick={() => navigate('?tab=routine')} className="interactive-card" style={{ padding: '1.25rem', cursor: 'pointer', textAlign: 'center', background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+                                    <FaCalendarAlt size={28} color="#3b82f6" style={{ marginBottom: '0.5rem' }} />
+                                    <h3 style={{ fontSize: '0.9rem' }}>Routines</h3>
+                                    <p style={{ color: 'var(--text-dim)', fontSize: '0.78rem' }}>Manage Routines</p>
                                 </div>
-                                <div onClick={() => navigate('?tab=batch')} className="interactive-card" style={{ padding: '2rem', cursor: 'pointer', textAlign: 'center', background: '#f0fdf4', border: '1px solid #86efac' }}>
-                                    <FaLayerGroup size={40} color="#22c55e" style={{ marginBottom: '1rem' }} />
-                                    <h3>Batches</h3>
-                                    <p style={{ color: 'var(--text-dim)' }}>Create & Manage Batches</p>
+                                <div onClick={() => navigate('?tab=batch')} className="interactive-card" style={{ padding: '1.25rem', cursor: 'pointer', textAlign: 'center', background: '#f0fdf4', border: '1px solid #86efac' }}>
+                                    <FaLayerGroup size={28} color="#22c55e" style={{ marginBottom: '0.5rem' }} />
+                                    <h3 style={{ fontSize: '0.9rem' }}>Batches</h3>
+                                    <p style={{ color: 'var(--text-dim)', fontSize: '0.78rem' }}>Create & Manage</p>
                                 </div>
                             </div>
                         </div>
@@ -223,14 +219,14 @@ const ComputerOperatorDashboard = () => {
                     {/* NOTICES TAB */}
                     {activeTab === 'notices' && (
                         <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
-                                    <FaBullhorn color="#f59e0b" /> Manage Notices
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.95rem', margin: 0 }}>
+                                    <FaBullhorn color="#f59e0b" size={14} /> Notices
                                 </h3>
                             </div>
 
-                            <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #e2e8f0' }}>
-                                <h4 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Post New Notice</h4>
+                            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '10px', marginBottom: '0.75rem', border: '1px solid #e2e8f0' }}>
+                                <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-main)', fontSize: '0.85rem' }}>Post New Notice</h4>
                                 <form onSubmit={(e) => postAnnouncement(e, 'NOTICE', noticeForm, setNoticeForm, fetchNotices)}>
                                     <input type="text" placeholder="Title" value={noticeForm.title} onChange={e => setNoticeForm({ ...noticeForm, title: e.target.value })} required style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '1rem' }} />
                                     <textarea rows="3" placeholder="Content..." value={noticeForm.content} onChange={e => setNoticeForm({ ...noticeForm, content: e.target.value })} required style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '1rem' }}></textarea>
@@ -274,14 +270,14 @@ const ComputerOperatorDashboard = () => {
                     {/* ROUTINE TAB */}
                     {activeTab === 'routine' && (
                         <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
-                                    <FaCalendarAlt color="#3b82f6" /> Manage Routines
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.95rem', margin: 0 }}>
+                                    <FaCalendarAlt color="#3b82f6" size={14} /> Routines
                                 </h3>
                             </div>
 
-                            <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #e2e8f0' }}>
-                                <h4 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Upload New Routine</h4>
+                            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '10px', marginBottom: '0.75rem', border: '1px solid #e2e8f0' }}>
+                                <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-main)', fontSize: '0.85rem' }}>Upload New Routine</h4>
                                 <form onSubmit={(e) => postAnnouncement(e, 'ROUTINE', routineForm, setRoutineForm, fetchRoutines)}>
                                     <input type="text" placeholder="Title (e.g. Fall 2024 Final Routine)" value={routineForm.title} onChange={e => setRoutineForm({ ...routineForm, title: e.target.value })} required style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '1rem' }} />
                                     <textarea rows="3" placeholder="Description..." value={routineForm.content} onChange={e => setRoutineForm({ ...routineForm, content: e.target.value })} required style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '1rem' }}></textarea>
@@ -325,14 +321,14 @@ const ComputerOperatorDashboard = () => {
                     {/* BATCH TAB */}
                     {activeTab === 'batch' && (
                         <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
-                                    <FaLayerGroup color="#22c55e" /> Manage Batches
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.95rem', margin: 0 }}>
+                                    <FaLayerGroup color="#22c55e" size={14} /> Batches
                                 </h3>
                             </div>
 
-                            <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid #e2e8f0' }}>
-                                <h4 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Create New Batch</h4>
+                            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '10px', marginBottom: '0.75rem', border: '1px solid #e2e8f0' }}>
+                                <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-main)', fontSize: '0.85rem' }}>Create New Batch</h4>
                                 <form onSubmit={createBatch} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                                     <input type="text" placeholder="Batch Name" value={batchForm.batch_name} onChange={e => setBatchForm({ ...batchForm, batch_name: e.target.value })} required style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                                     <input type="text" placeholder="Username" value={batchForm.batch_username} onChange={e => setBatchForm({ ...batchForm, batch_username: e.target.value })} required style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />

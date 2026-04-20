@@ -231,11 +231,21 @@ router.get('/me', auth, async (req, res) => {
     }
 });
 
-// @route   GET api/auth/teachers
-// @desc    Get all teachers
-// @access  Chairman
+// =====================================================================
+// PATCH 1: server/routes/authRoutes.js
+// Change ONE line in the GET /teachers route
+// =====================================================================
+ 
+// FIND this line (around line ~175):
+//   if (req.user.role !== 'CHAIRMAN') {
+// REPLACE with:
+//   if (!['CHAIRMAN', 'TEACHER'].includes(req.user.role)) {
+ 
+// This allows teachers to fetch the teacher list for the cell editor dropdown.
+// The full replaced block looks like:
+ 
 router.get('/teachers', auth, async (req, res) => {
-    if (req.user.role !== 'CHAIRMAN') {
+    if (!['CHAIRMAN', 'TEACHER'].includes(req.user.role)) {  // ← CHANGED LINE
         return res.status(403).json({ msg: 'Access denied' });
     }
     try {
@@ -246,6 +256,5 @@ router.get('/teachers', auth, async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
-
 
 module.exports = router;

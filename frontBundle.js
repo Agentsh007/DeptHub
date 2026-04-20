@@ -4938,7 +4938,6 @@ import {
   FaFilePdf,
   FaTrash,
   FaFolder,
-  FaPaperclip,
   FaFileImage,
   FaFileWord,
   FaFileExcel,
@@ -4951,6 +4950,9 @@ import {
 } from "react-icons/fa";
 import NoticeDetail from "../../components/NoticeDetail";
 import Notice from "../../components/Notice";
+
+//17 april, 2026 12:47AM
+import { FaEdit, FaSave, FaTimes } from "react-icons/fa";
 
 /* ─── Shared Inline Styles ─── */
 import s from "../../utils/teacherDashboard";
@@ -5001,15 +5003,10 @@ const TeacherDashboard = () => {
   const [batches, setBatches] = useState([]);
   const [myDocs, setMyDocs] = useState([]);
   const [notices, setNotices] = useState([]);
-  const [routines, setRoutines] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState("");
   const [file, setFile] = useState(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  // Add these with your other state declarations
-  const [peerFeedbackText, setPeerFeedbackText] = useState({}); // { [routineId]: 'text' }
-  const [peerFeedbackSending, setPeerFeedbackSending] = useState({}); // { [routineId]: true/false }
-  const [peerFeedbackSent, setPeerFeedbackSent] = useState({}); // { [routineId]: true }
   // Profile
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({
@@ -5028,9 +5025,6 @@ const TeacherDashboard = () => {
   });
   const closeConfirmModal = () =>
     setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-
-  // Feedback
-  const [feedbackList, setFeedbackList] = useState([]);
 
   // Notices sub-view
   const [showNoticeForm, setShowNoticeForm] = useState(false);
@@ -5084,41 +5078,17 @@ const TeacherDashboard = () => {
     }
   };
 
-  const fetchRoutines = async () => {
-    try {
-      const res = await axios.get("/announcements");
-      const allRoutines = res.data.filter((n) => n.type === "ROUTINE");
-      setRoutines(allRoutines);
-
-      // Fetch feedback for ALL PENDING_FEEDBACK routines (own + peers)
-      const needsFeedback = allRoutines.filter(
-        (r) => r.status === "PENDING_FEEDBACK",
-      );
-      if (needsFeedback.length > 0) {
-        let allFeedback = [];
-        for (let r of needsFeedback) {
-          try {
-            const fbRes = await axios.get(
-              `/feedback?target_announcement_id=${r._id}`,
-            );
-            allFeedback = [...allFeedback, ...fbRes.data];
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        setFeedbackList(allFeedback);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
     if (activeTab === "new-upload" || activeTab === "announcement")
       fetchBatches();
     if (activeTab === "my-uploads") fetchMyDocs();
     if (activeTab === "notices") fetchNotices();
-    if (activeTab === "routine") fetchRoutines();
+    if (activeTab === "routine") {
+      initializeTimetable();
+      fetchPreviousRoutines();
+    }
+    // Intentional: tab data is loaded when switching tabs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handleUpload = async (e) => {
@@ -5141,60 +5111,6 @@ const TeacherDashboard = () => {
       setMsg("Upload Failed");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleRoutineUpload = async (status) => {
-    if (!file) {
-      alert("Please select a file.");
-      return;
-    }
-    const msg = document.getElementById("routineMsg").value;
-    if (!msg) {
-      alert("Please enter routine details.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("title", "Routine");
-    formData.append("content", msg);
-    formData.append("type", "ROUTINE");
-    formData.append("status", status);
-
-    setLoading(true);
-    try {
-      await axios.post("/announcements", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      alert("Routine submitted successfully!");
-      setFile(null);
-      document.getElementById("routineMsg").value = "";
-      document.getElementById("routineFile").value = "";
-      fetchRoutines();
-    } catch {
-      alert("Failed to send routine");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendToChairman = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to send this routine to the Chairman for final approval?",
-      )
-    )
-      return;
-    try {
-      await axios.put(`/announcements/${id}/status`, {
-        status: "PENDING_APPROVAL",
-      });
-      alert("Routine sent to Chairman for approval!");
-      fetchRoutines();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to send for approval");
     }
   };
 
@@ -5261,41 +5177,12 @@ const TeacherDashboard = () => {
       alert("Update failed");
     }
   };
-  const submitPeerFeedback = async (routineId) => {
-    const text = peerFeedbackText[routineId]?.trim();
-    if (!text) return alert("Please write your feedback first.");
 
-    setPeerFeedbackSending((prev) => ({ ...prev, [routineId]: true }));
-    try {
-      await axios.post("/feedback", {
-        message_content: text,
-        target_announcement: routineId,
-      });
-      // Mark as sent and clear the input
-      setPeerFeedbackSent((prev) => ({ ...prev, [routineId]: true }));
-      setPeerFeedbackText((prev) => ({ ...prev, [routineId]: "" }));
-      fetchRoutines(); // refresh to show updated feedback count
-    } catch {
-      alert("Failed to submit feedback. Please try again.");
-    } finally {
-      setPeerFeedbackSending((prev) => ({ ...prev, [routineId]: false }));
-    }
-  };
-
-  const deleteFeedback = async (id) => {
-    if (!window.confirm("Delete this feedback?")) return;
-    try {
-      await axios.delete(`/feedback/${id}`);
-      fetchRoutines();
-    } catch {
-      alert("Failed");
-    }
-  };
   const deleteRoutine = async (id) => {
     if (!window.confirm("Delete this routine?")) return;
     try {
       await axios.delete(`/announcements/${id}`);
-      fetchRoutines();
+      fetchPreviousRoutines();
     } catch {
       alert("Failed");
     }
@@ -5319,21 +5206,6 @@ const TeacherDashboard = () => {
     });
   };
 
-  if (authLoading)
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          height: "100vh",
-          alignItems: "center",
-        }}
-      >
-        <Loader />
-      </div>
-    );
-  if (!user) return null;
-
   // Group uploads by batch for My Uploads tab
   const groupedDocs = myDocs.reduce((acc, doc) => {
     const batchName = doc.target_batch?.batch_name || "General";
@@ -5343,17 +5215,277 @@ const TeacherDashboard = () => {
   }, {});
   const batchNames = Object.keys(groupedDocs);
 
-  // Routine helpers
-  const pendingRoutines = routines.filter(
-    (r) =>
-      (r.status === "PENDING_APPROVAL" || r.status === "PENDING_FEEDBACK") &&
-      r.author?._id === user.id,
-  );
-  const publishedRoutines = routines.filter((r) => r.status === "APPROVED");
-  // Routines from OTHER teachers that need peer review
-  const peerReviewRoutines = routines.filter(
-    (r) => r.status === "PENDING_FEEDBACK" && r.author?._id !== user.id,
-  );
+  //17 april, 2026 12:47AM - Routine Builder
+  // New states for Routine Builder
+  const [timetableData, setTimetableData] = useState([]);
+  const [previousRoutines, setPreviousRoutines] = useState([]);
+  const [editingRoutineId, setEditingRoutineId] = useState(null);
+
+  // Cell editor modal state
+  const [cellEditor, setCellEditor] = useState(null); // { dayIndex, semIndex, slotIndex, slot }
+
+  const days = ["SUN", "MON", "TUE", "WED", "THU"];
+  const semesters = [
+    "1st Sem (2025)",
+    "2nd Sem (2025)",
+    "3rd Sem",
+    "4th Sem",
+    "MSc/M",
+  ];
+
+  // Initialize empty timetable
+  const initializeTimetable = () => {
+    const data = days.map((day) => ({
+      day,
+      semesterRows: semesters.map((sem) => ({
+        semester: sem,
+        slots: Array(6)
+          .fill()
+          .map(() => ({
+            course: "",
+            teacher: "",
+            room: "",
+            status: "NORMAL",
+            reason: "",
+          })),
+      })),
+    }));
+    setTimetableData(data);
+  };
+
+  // Fetch previous routines
+  const fetchPreviousRoutines = async () => {
+    try {
+      const res = await axios.get("/announcements");
+      const routines = res.data.filter(
+        (a) => a.type === "ROUTINE" && a.author?._id === user.id,
+      );
+      setPreviousRoutines(routines);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Open cell editor
+  const openCellEditor = (dayIndex, semIndex, slotIndex) => {
+    const slot =
+      timetableData[dayIndex].semesterRows[semIndex].slots[slotIndex];
+    setCellEditor({ dayIndex, semIndex, slotIndex, slot: { ...slot } });
+  };
+
+  // Save cell
+  const saveCell = (updatedSlot) => {
+    setTimetableData((prev) => {
+      const newData = [...prev];
+      newData[cellEditor.dayIndex].semesterRows[cellEditor.semIndex].slots[
+        cellEditor.slotIndex
+      ] = updatedSlot;
+      return newData;
+    });
+    setCellEditor(null);
+  };
+
+  // Submit routine (create or update)
+  const submitRoutine = async () => {
+    try {
+      await axios.post("/announcements/routine-builder", {
+        title: "Weekly Routine",
+        timetable: timetableData,
+        routineId: editingRoutineId,
+      });
+      alert(
+        editingRoutineId
+          ? "Routine updated successfully!"
+          : "Routine created and PDF generated!",
+      );
+      initializeTimetable();
+      setEditingRoutineId(null);
+      fetchPreviousRoutines();
+    } catch (err) {
+      alert("Failed to save routine");
+      console.error(err);
+    }
+  };
+
+  const handleEditRoutine = (routine) => {
+    setEditingRoutineId(routine._id);
+    if (Array.isArray(routine.timetable) && routine.timetable.length > 0) {
+      setTimetableData(routine.timetable);
+    } else {
+      initializeTimetable();
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingRoutineId(null);
+    initializeTimetable();
+  };
+
+  // Keep your existing fetch functions (fetchBatches, fetchMyDocs, etc.) unchanged
+
+  // ==================== CELL EDITOR MODAL ====================
+  const renderCellEditor = () => {
+    if (!cellEditor) return null;
+    const { slot } = cellEditor;
+
+    return (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.7)",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            padding: "2rem",
+            borderRadius: "16px",
+            width: "420px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+          }}
+        >
+          <h3 style={{ marginBottom: "1rem" }}>Edit Slot</h3>
+
+          <input
+            placeholder="Course Code"
+            value={slot.course}
+            onChange={(e) =>
+              setCellEditor({
+                ...cellEditor,
+                slot: { ...slot, course: e.target.value },
+              })
+            }
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+          />
+          <input
+            placeholder="Teacher Initials"
+            value={slot.teacher}
+            onChange={(e) =>
+              setCellEditor({
+                ...cellEditor,
+                slot: { ...slot, teacher: e.target.value },
+              })
+            }
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+          />
+          <input
+            placeholder="Room"
+            value={slot.room}
+            onChange={(e) =>
+              setCellEditor({
+                ...cellEditor,
+                slot: { ...slot, room: e.target.value },
+              })
+            }
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+          />
+
+          <div style={{ margin: "15px 0" }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={slot.status === "CANCELLED"}
+                onChange={(e) =>
+                  setCellEditor({
+                    ...cellEditor,
+                    slot: {
+                      ...slot,
+                      status: e.target.checked ? "CANCELLED" : "NORMAL",
+                    },
+                  })
+                }
+              />
+              Mark as Cancelled
+            </label>
+          </div>
+
+          {slot.status === "CANCELLED" && (
+            <input
+              placeholder="Reason (optional)"
+              value={slot.reason}
+              onChange={(e) =>
+                setCellEditor({
+                  ...cellEditor,
+                  slot: { ...slot, reason: e.target.value },
+                })
+              }
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "20px",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+              }}
+            />
+          )}
+
+          <div
+            style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
+          >
+            <button
+              onClick={() => setCellEditor(null)}
+              style={{ padding: "10px 20px" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => saveCell(slot)}
+              style={{
+                background: "#16a34a",
+                color: "white",
+                padding: "10px 20px",
+                borderRadius: "8px",
+              }}
+            >
+              Save Slot
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ==================== RETURN JSX ====================
+  if (authLoading)
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Loader />
+      </div>
+    );
+  if (!user) return null;
 
   return (
     <Layout>
@@ -5366,7 +5498,6 @@ const TeacherDashboard = () => {
           message={confirmModal.message}
           isDanger={confirmModal.isDanger}
         />
-
         {/* ═══════ ANNOUNCEMENTS TAB ═══════ */}
         {activeTab === "announcement" && (
           <div style={s.outerCard}>
@@ -5421,7 +5552,6 @@ const TeacherDashboard = () => {
             </form>
           </div>
         )}
-
         {/* ═══════ NEW UPLOAD TAB ═══════ */}
         {activeTab === "new-upload" && (
           <div style={s.outerCard}>
@@ -5487,7 +5617,6 @@ const TeacherDashboard = () => {
             </form>
           </div>
         )}
-
         {/* ═══════ MY UPLOADS TAB ═══════ */}
         {activeTab === "my-uploads" && (
           <div style={s.outerCard}>
@@ -5619,7 +5748,6 @@ const TeacherDashboard = () => {
             )}
           </div>
         )}
-
         {/* ═══════ NOTICES TAB ═══════ */}
         {activeTab === "notices" && (
           <Notice
@@ -5635,475 +5763,771 @@ const TeacherDashboard = () => {
             fetchNotices={fetchNotices}
           />
         )}
-
-        {/* ═══════ ROUTINE TAB ═══════ */}
+        {/* NEW ROUTINE BUILDER TAB */}
         {activeTab === "routine" && (
-          <>
-            {/* Upload Routine */}
-            <div style={s.outerCard}>
-              <h2 style={s.sectionTitle}>Routine</h2>
-              <form onSubmit={(e) => e.preventDefault()}>
-                <div style={{ marginBottom: "1.25rem" }}>
-                  <textarea
-                    name="msg"
-                    id="routineMsg"
-                    placeholder="Routine Details / Message..."
-                    rows="3"
-                    style={s.textarea}
-                    required
-                  ></textarea>
-                </div>
-                <div style={{ marginBottom: "1.5rem" }}>
-                  <label style={s.label}>Select Document</label>
-                  <div
-                    onClick={() =>
-                      document.getElementById("routineFile").click()
-                    }
-                    style={s.uploadZone}
-                  >
-                    <div style={{ color: "#ea580c", marginBottom: "0.75rem" }}>
-                      <FaCloudUploadAlt size={48} />
-                    </div>
-                    {file ? (
-                      <div style={{ fontWeight: "600", color: "#1e293b" }}>
-                        {file.name}
-                      </div>
-                    ) : (
-                      <div style={{ color: "#1e293b", fontWeight: "600" }}>
-                        Click to browse file
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    id="routineFile"
-                    type="file"
-                    onChange={(e) => setFile(e.target.files[0])}
-                    style={{ display: "none" }}
-                    accept=".pdf,.doc,.docx,.jpg,.png"
-                  />
-                </div>
-                <div className="teacher-routine-btns">
-                  <button
-                    type="button"
-                    onClick={() => handleRoutineUpload("PENDING_FEEDBACK")}
-                    style={s.declineBtn}
-                    disabled={loading}
-                  >
-                    Request Peer Feedback
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRoutineUpload("PENDING_APPROVAL")}
-                    style={s.publishBtn}
-                    disabled={loading}
-                  >
-                    Send for Approval
-                  </button>
-                </div>
-              </form>
-            </div>
+          <div style={s.outerCard}>
+            <h2 style={s.sectionTitle}>📅 Routine Builder</h2>
 
-            {/* ═══ PEER REVIEW SECTION — routines from other teachers ═══ */}
-            {peerReviewRoutines.length > 0 && (
-              <div style={s.outerCard}>
-                <h2 style={s.sectionTitle}>
-                  👥 Peer Review Requests
-                  <span
-                    style={{
-                      marginLeft: "0.75rem",
-                      background: "#fef3c7",
-                      color: "#b45309",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      padding: "0.2rem 0.6rem",
-                      borderRadius: "999px",
-                    }}
-                  >
-                    {peerReviewRoutines.length} pending
-                  </span>
-                </h2>
-                <p
-                  style={{
-                    color: "#64748b",
-                    fontSize: "0.875rem",
-                    marginBottom: "1.25rem",
-                  }}
-                >
-                  Your colleagues have requested feedback on their routines
-                  before sending to the Chairman.
-                </p>
-
-                {peerReviewRoutines.map((r) => (
-                  <div
-                    key={r._id}
-                    style={{ ...s.noticeCard, borderLeft: "4px solid #f59e0b" }}
-                  >
-                    {/* Routine info */}
-                    <div style={{ marginBottom: "1rem" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          flexWrap: "wrap",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <h4
-                          style={{
-                            fontWeight: "700",
-                            color: "#1e293b",
-                            margin: 0,
-                          }}
-                        >
-                          {r.title}
-                        </h4>
-                        <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-                          by {r.author?.full_name} ·{" "}
-                          {new Date(r.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {r.content && (
-                        <p
-                          style={{
-                            color: "#475569",
-                            fontSize: "0.9rem",
-                            margin: "0.5rem 0",
-                          }}
-                        >
-                          {r.content}
-                        </p>
-                      )}
-                      {r.file_url && (
-                        <a
-                          href={r.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={s.attachBtn}
-                        >
-                          <FaPaperclip /> View Routine Document
-                        </a>
-                      )}
-                    </div>
-
-                    {/* Feedback already given by others */}
-                    {feedbackList.filter((f) => f.target_announcement === r._id)
-                      .length > 0 && (
-                      <div
-                        style={{
-                          marginBottom: "1rem",
-                          padding: "0.75rem",
-                          background: "#f8fafc",
-                          borderRadius: "8px",
-                          border: "1px solid #e2e8f0",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: "0.8rem",
-                            fontWeight: "600",
-                            color: "#475569",
-                            marginBottom: "0.5rem",
-                          }}
-                        >
-                          Feedback so far:
-                        </div>
-                        {feedbackList
-                          .filter((f) => f.target_announcement === r._id)
-                          .map((f) => (
-                            <div
-                              key={f._id}
-                              style={{
-                                fontSize: "0.85rem",
-                                color: "#334155",
-                                marginBottom: "0.35rem",
-                              }}
-                            >
-                              <strong>
-                                {f.from_user?.full_name || "A colleague"}:
-                              </strong>{" "}
-                              {f.message_content}
-                            </div>
-                          ))}
-                      </div>
-                    )}
-
-                    {/* Feedback input — hide if already submitted this session */}
-                    {peerFeedbackSent[r._id] ? (
-                      <div
-                        style={{
-                          padding: "0.75rem 1rem",
-                          background: "#dcfce7",
-                          borderRadius: "8px",
-                          color: "#166534",
-                          fontSize: "0.9rem",
-                          fontWeight: "500",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        ✓ Your feedback was submitted successfully.
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "0.75rem",
-                          alignItems: "flex-end",
-                        }}
-                      >
-                        <textarea
-                          rows="2"
-                          placeholder="Write your feedback for this routine..."
-                          value={peerFeedbackText[r._id] || ""}
-                          onChange={(e) =>
-                            setPeerFeedbackText((prev) => ({
-                              ...prev,
-                              [r._id]: e.target.value,
-                            }))
-                          }
-                          style={{
-                            ...s.textarea,
-                            flex: 1,
-                            marginBottom: 0,
-                            resize: "vertical",
-                            minHeight: "60px",
-                          }}
-                        />
-                        <button
-                          onClick={() => submitPeerFeedback(r._id)}
-                          disabled={
-                            peerFeedbackSending[r._id] ||
-                            !peerFeedbackText[r._id]?.trim()
-                          }
-                          style={{
-                            ...s.publishBtn,
-                            padding: "0.6rem 1.25rem",
-                            fontSize: "0.875rem",
-                            whiteSpace: "nowrap",
-                            opacity: !peerFeedbackText[r._id]?.trim() ? 0.5 : 1,
-                          }}
-                        >
-                          {peerFeedbackSending[r._id]
-                            ? "Sending..."
-                            : "✉ Submit"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Pending Routine / Routine for Approval */}
-            {pendingRoutines.length > 0 && (
-              <div style={s.outerCard}>
-                <h2 style={s.sectionTitle}>⏳ Routine for Approval</h2>
-                {pendingRoutines.map((r) => (
-                  <div key={r._id} style={s.noticeCard}>
-                    <div className="chairman-card-row">
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h4
-                          style={{
-                            fontWeight: "700",
-                            color: "#1e293b",
-                            marginBottom: "0.3rem",
-                          }}
-                        >
-                          {r.title}
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              fontWeight: "normal",
-                              marginLeft: "0.5rem",
-                              padding: "0.2rem 0.5rem",
-                              borderRadius: "4px",
-                              background:
-                                r.status === "PENDING_FEEDBACK"
-                                  ? "#fef3c7"
-                                  : "#fed7aa",
-                              color:
-                                r.status === "PENDING_FEEDBACK"
-                                  ? "#b45309"
-                                  : "#c2410c",
-                            }}
-                          >
-                            {r.status.replace("_", " ")}
-                          </span>
-                        </h4>
-                        {r.content && (
-                          <p
-                            style={{
-                              color: "#64748b",
-                              fontSize: "0.9rem",
-                              margin: "0 0 0.5rem",
-                            }}
-                          >
-                            {r.content}
-                          </p>
-                        )}
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "0.75rem",
-                            flexWrap: "wrap",
-                            alignItems: "center",
-                          }}
-                        >
-                          {r.file_url && (
-                            <a
-                              href={r.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={s.attachBtn}
-                            >
-                              <FaPaperclip /> View Attached Document
-                            </a>
-                          )}
-                          {r.status === "PENDING_FEEDBACK" && (
-                            <button
-                              onClick={() => sendToChairman(r._id)}
-                              style={{
-                                ...s.publishBtn,
-                                padding: "0.4rem 1rem",
-                                fontSize: "0.8rem",
-                              }}
-                            >
-                              Send to Chairman
-                            </button>
-                          )}
-                        </div>
-                        {/* Show feedback on this routine */}
-                        {feedbackList.filter(
-                          (f) => f.target_announcement === r._id,
-                        ).length > 0 && (
-                          <div
-                            style={{
-                              marginTop: "0.75rem",
-                              padding: "0.75rem",
-                              background: "#f0f9ff",
-                              borderRadius: "8px",
-                              borderLeft: "3px solid #0ea5e9",
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: "0.8rem",
-                                fontWeight: "600",
-                                color: "#0369a1",
-                                marginBottom: "0.4rem",
-                              }}
-                            >
-                              Peer Feedback:
-                            </div>
-                            {feedbackList
-                              .filter((f) => f.target_announcement === r._id)
-                              .map((f) => (
-                                <div
-                                  key={f._id}
-                                  style={{
-                                    fontSize: "0.85rem",
-                                    color: "#334155",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "flex-start",
-                                    marginBottom: "0.3rem",
-                                  }}
-                                >
-                                  <div>
-                                    <strong>
-                                      {f.from_user?.full_name || "Anonymous"}:
-                                    </strong>{" "}
-                                    {f.message_content}
-                                  </div>
-                                  <button
-                                    onClick={() => deleteFeedback(f._id)}
-                                    style={s.deleteBtn}
-                                  >
-                                    <FaTrash size={11} />
-                                  </button>
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => deleteRoutine(r._id)}
-                        style={s.deleteBtn}
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Published / Approved Routines */}
-            <div style={s.outerCard}>
-              <h2 style={s.sectionTitle}>Published Routine</h2>
-              {publishedRoutines.length === 0 ? (
-                <p
-                  style={{
-                    color: "#94a3b8",
-                    textAlign: "center",
-                    fontStyle: "italic",
-                  }}
-                >
-                  No published routines yet.
+            {/* Previous Routines */}
+            <div style={{ marginBottom: "2rem" }}>
+              <h3
+                style={{
+                  fontSize: "1.1rem",
+                  marginBottom: "1rem",
+                  color: "#1e293b",
+                }}
+              >
+                Your Previous Routines
+              </h3>
+              {previousRoutines.length === 0 ? (
+                <p style={{ color: "#94a3b8", fontStyle: "italic" }}>
+                  No routines yet. Create your first one below.
                 </p>
               ) : (
-                publishedRoutines.map((r) => (
-                  <div key={r._id} style={s.noticeCard}>
-                    <h4
-                      style={{
-                        fontWeight: "700",
-                        color: "#1e293b",
-                        marginBottom: "0.3rem",
-                      }}
-                    >
-                      {r.title}{" "}
-                      {r.author?._id !== user.id && (
-                        <span
-                          style={{
-                            fontWeight: "normal",
-                            color: "#64748b",
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          — by {r.author?.full_name}
-                        </span>
-                      )}
-                    </h4>
-                    {r.content && (
-                      <p
+                previousRoutines.map((r) => (
+                  <div
+                    key={r._id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      background: "#f8fafc",
+                      padding: "1rem 1.5rem",
+                      borderRadius: "12px",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    <div>
+                      <strong>{r.title}</strong>
+                      <div style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                        {new Date(r.created_at).toLocaleDateString()} •{" "}
+                        {r.status}
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => handleEditRoutine(r)}
                         style={{
-                          color: "#64748b",
-                          fontSize: "0.9rem",
-                          margin: "0 0 0.5rem",
+                          background: "#3b82f6",
+                          color: "white",
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          marginRight: "8px",
                         }}
                       >
-                        {r.content}
-                      </p>
-                    )}
-                    {r.file_url && (
-                      <a
-                        href={r.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={s.attachBtn}
+                        <FaEdit size={14} /> Edit
+                      </button>
+                      <button
+                        onClick={() => deleteRoutine(r._id)}
+                        style={{
+                          background: "#ef4444",
+                          color: "white",
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                        }}
                       >
-                        <FaPaperclip /> View Attached Document
-                      </a>
-                    )}
+                        <FaTrash size={14} />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
             </div>
-          </>
-        )}
 
+            {/* Grid */}
+            <div style={{ marginBottom: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+                {editingRoutineId ? "Editing Routine" : "Create New Routine"}
+              </h3>
+
+              <div
+                style={{
+                  overflowX: "auto",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "12px",
+                }}
+              >
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    minWidth: "1100px",
+                  }}
+                >
+                  <thead>
+                    <tr style={{ background: "#f1f5f9" }}>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "left",
+                          fontWeight: "600",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        Day / Semester
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        09:05 - 10:00
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        10:05 - 11:00
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        11:05 - 12:00
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        01:00 - 02:00
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        02:05 - 03:00
+                      </th>
+                      <th
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          fontWeight: "600",
+                          borderBottom: "2px solid #e2e8f0",
+                        }}
+                      >
+                        03:05 - 04:00
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timetableData.map((dayRow, dayIndex) => (
+                      <React.Fragment key={dayRow.day}>
+                        {/* Day Header Row */}
+                        <tr style={{ background: "#e0f2fe" }}>
+                          <td
+                            colSpan="7"
+                            style={{
+                              padding: "0.75rem 1rem",
+                              fontWeight: "700",
+                              color: "#0c4a6e",
+                              fontSize: "1.1rem",
+                            }}
+                          >
+                            {dayRow.day}
+                          </td>
+                        </tr>
+
+                        {/* Semester Rows */}
+                        {dayRow.semesterRows.map((semRow, semIndex) => (
+                          <tr key={semIndex}>
+                            <td
+                              style={{
+                                padding: "1rem",
+                                fontWeight: "600",
+                                background: "#f8fafc",
+                                borderBottom: "1px solid #e2e8f0",
+                              }}
+                            >
+                              {semRow.semester}
+                            </td>
+                            {semRow.slots.map((slot, slotIndex) => (
+                              <td
+                                key={slotIndex}
+                                onClick={() =>
+                                  openCellEditor(dayIndex, semIndex, slotIndex)
+                                }
+                                style={{
+                                  padding: "0.75rem",
+                                  borderBottom: "1px solid #e2e8f0",
+                                  borderRight: "1px solid #e2e8f0",
+                                  cursor: "pointer",
+                                  minWidth: "140px",
+                                  background:
+                                    slot.status === "CANCELLED"
+                                      ? "#fee2e2"
+                                      : "white",
+                                  position: "relative",
+                                }}
+                              >
+                                {slot.status === "CANCELLED" ? (
+                                  <div
+                                    style={{
+                                      color: "#ef4444",
+                                      fontWeight: "600",
+                                      fontSize: "0.85rem",
+                                    }}
+                                  >
+                                    CANCELLED
+                                    {slot.reason && (
+                                      <div style={{ fontSize: "0.75rem" }}>
+                                        {slot.reason}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div
+                                    style={{
+                                      fontSize: "0.85rem",
+                                      lineHeight: "1.4",
+                                    }}
+                                  >
+                                    <strong>{slot.course}</strong>
+                                    <br />
+                                    {slot.teacher && (
+                                      <span style={{ color: "#2563eb" }}>
+                                        {slot.teacher}
+                                      </span>
+                                    )}
+                                    {slot.room && (
+                                      <span style={{ color: "#64748b" }}>
+                                        {" "}
+                                        ({slot.room})
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div
+              style={{
+                display: "flex",
+                gap: "1rem",
+                justifyContent: "flex-end",
+              }}
+            >
+              {editingRoutineId && (
+                <button
+                  onClick={cancelEditing}
+                  style={{
+                    background: "#f1f5f9",
+                    padding: "0.85rem 2rem",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <FaTimes /> Cancel Edit
+                </button>
+              )}
+              <button
+                onClick={submitRoutine}
+                style={{
+                  background: "#16a34a",
+                  color: "white",
+                  padding: "0.85rem 2rem",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                }}
+              >
+                <FaSave />{" "}
+                {editingRoutineId
+                  ? "Update Routine"
+                  : "Generate & Submit Routine"}
+              </button>
+            </div>
+          </div>
+        )}
+        {renderCellEditor()} {/* ← Cell Editor Modal */}
+        {/* ═══════ ROUTINE TAB ═══════ */}
+        {
+          // activeTab === "routine" && (
+          //   <>
+          //     {/* Upload Routine */}
+          //     <div style={s.outerCard}>
+          //       <h2 style={s.sectionTitle}>Routine</h2>
+          //       <form onSubmit={(e) => e.preventDefault()}>
+          //         <div style={{ marginBottom: "1.25rem" }}>
+          //           <textarea
+          //             name="msg"
+          //             id="routineMsg"
+          //             placeholder="Routine Details / Message..."
+          //             rows="3"
+          //             style={s.textarea}
+          //             required
+          //           ></textarea>
+          //         </div>
+          //         <div style={{ marginBottom: "1.5rem" }}>
+          //           <label style={s.label}>Select Document</label>
+          //           <div
+          //             onClick={() =>
+          //               document.getElementById("routineFile").click()
+          //             }
+          //             style={s.uploadZone}
+          //           >
+          //             <div style={{ color: "#ea580c", marginBottom: "0.75rem" }}>
+          //               <FaCloudUploadAlt size={48} />
+          //             </div>
+          //             {file ? (
+          //               <div style={{ fontWeight: "600", color: "#1e293b" }}>
+          //                 {file.name}
+          //               </div>
+          //             ) : (
+          //               <div style={{ color: "#1e293b", fontWeight: "600" }}>
+          //                 Click to browse file
+          //               </div>
+          //             )}
+          //           </div>
+          //           <input
+          //             id="routineFile"
+          //             type="file"
+          //             onChange={(e) => setFile(e.target.files[0])}
+          //             style={{ display: "none" }}
+          //             accept=".pdf,.doc,.docx,.jpg,.png"
+          //           />
+          //         </div>
+          //         <div className="teacher-routine-btns">
+          //           <button
+          //             type="button"
+          //             onClick={() => handleRoutineUpload("PENDING_FEEDBACK")}
+          //             style={s.declineBtn}
+          //             disabled={loading}
+          //           >
+          //             Request Peer Feedback
+          //           </button>
+          //           <button
+          //             type="button"
+          //             onClick={() => handleRoutineUpload("PENDING_APPROVAL")}
+          //             style={s.publishBtn}
+          //             disabled={loading}
+          //           >
+          //             Send for Approval
+          //           </button>
+          //         </div>
+          //       </form>
+          //     </div>
+          //     {/* ═══ PEER REVIEW SECTION — routines from other teachers ═══ */}
+          //     {peerReviewRoutines.length > 0 && (
+          //       <div style={s.outerCard}>
+          //         <h2 style={s.sectionTitle}>
+          //           👥 Peer Review Requests
+          //           <span
+          //             style={{
+          //               marginLeft: "0.75rem",
+          //               background: "#fef3c7",
+          //               color: "#b45309",
+          //               fontSize: "0.75rem",
+          //               fontWeight: "700",
+          //               padding: "0.2rem 0.6rem",
+          //               borderRadius: "999px",
+          //             }}
+          //           >
+          //             {peerReviewRoutines.length} pending
+          //           </span>
+          //         </h2>
+          //         <p
+          //           style={{
+          //             color: "#64748b",
+          //             fontSize: "0.875rem",
+          //             marginBottom: "1.25rem",
+          //           }}
+          //         >
+          //           Your colleagues have requested feedback on their routines
+          //           before sending to the Chairman.
+          //         </p>
+          //         {peerReviewRoutines.map((r) => (
+          //           <div
+          //             key={r._id}
+          //             style={{ ...s.noticeCard, borderLeft: "4px solid #f59e0b" }}
+          //           >
+          //             {/* Routine info */}
+          //             <div style={{ marginBottom: "1rem" }}>
+          //               <div
+          //                 style={{
+          //                   display: "flex",
+          //                   justifyContent: "space-between",
+          //                   alignItems: "flex-start",
+          //                   flexWrap: "wrap",
+          //                   gap: "0.5rem",
+          //                 }}
+          //               >
+          //                 <h4
+          //                   style={{
+          //                     fontWeight: "700",
+          //                     color: "#1e293b",
+          //                     margin: 0,
+          //                   }}
+          //                 >
+          //                   {r.title}
+          //                 </h4>
+          //                 <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+          //                   by {r.author?.full_name} ·{" "}
+          //                   {new Date(r.created_at).toLocaleDateString()}
+          //                 </span>
+          //               </div>
+          //               {r.content && (
+          //                 <p
+          //                   style={{
+          //                     color: "#475569",
+          //                     fontSize: "0.9rem",
+          //                     margin: "0.5rem 0",
+          //                   }}
+          //                 >
+          //                   {r.content}
+          //                 </p>
+          //               )}
+          //               {r.file_url && (
+          //                 <a
+          //                   href={r.file_url}
+          //                   target="_blank"
+          //                   rel="noopener noreferrer"
+          //                   style={s.attachBtn}
+          //                 >
+          //                   <FaPaperclip /> View Routine Document
+          //                 </a>
+          //               )}
+          //             </div>
+          //             {/* Feedback already given by others */}
+          //             {feedbackList.filter((f) => f.target_announcement === r._id)
+          //               .length > 0 && (
+          //               <div
+          //                 style={{
+          //                   marginBottom: "1rem",
+          //                   padding: "0.75rem",
+          //                   background: "#f8fafc",
+          //                   borderRadius: "8px",
+          //                   border: "1px solid #e2e8f0",
+          //                 }}
+          //               >
+          //                 <div
+          //                   style={{
+          //                     fontSize: "0.8rem",
+          //                     fontWeight: "600",
+          //                     color: "#475569",
+          //                     marginBottom: "0.5rem",
+          //                   }}
+          //                 >
+          //                   Feedback so far:
+          //                 </div>
+          //                 {feedbackList
+          //                   .filter((f) => f.target_announcement === r._id)
+          //                   .map((f) => (
+          //                     <div
+          //                       key={f._id}
+          //                       style={{
+          //                         fontSize: "0.85rem",
+          //                         color: "#334155",
+          //                         marginBottom: "0.35rem",
+          //                       }}
+          //                     >
+          //                       <strong>
+          //                         {f.from_user?.full_name || "A colleague"}:
+          //                       </strong>{" "}
+          //                       {f.message_content}
+          //                     </div>
+          //                   ))}
+          //               </div>
+          //             )}
+          //             {/* Feedback input — hide if already submitted this session */}
+          //             {peerFeedbackSent[r._id] ? (
+          //               <div
+          //                 style={{
+          //                   padding: "0.75rem 1rem",
+          //                   background: "#dcfce7",
+          //                   borderRadius: "8px",
+          //                   color: "#166534",
+          //                   fontSize: "0.9rem",
+          //                   fontWeight: "500",
+          //                   display: "flex",
+          //                   alignItems: "center",
+          //                   gap: "0.5rem",
+          //                 }}
+          //               >
+          //                 ✓ Your feedback was submitted successfully.
+          //               </div>
+          //             ) : (
+          //               <div
+          //                 style={{
+          //                   display: "flex",
+          //                   gap: "0.75rem",
+          //                   alignItems: "flex-end",
+          //                 }}
+          //               >
+          //                 <textarea
+          //                   rows="2"
+          //                   placeholder="Write your feedback for this routine..."
+          //                   value={peerFeedbackText[r._id] || ""}
+          //                   onChange={(e) =>
+          //                     setPeerFeedbackText((prev) => ({
+          //                       ...prev,
+          //                       [r._id]: e.target.value,
+          //                     }))
+          //                   }
+          //                   style={{
+          //                     ...s.textarea,
+          //                     flex: 1,
+          //                     marginBottom: 0,
+          //                     resize: "vertical",
+          //                     minHeight: "60px",
+          //                   }}
+          //                 />
+          //                 <button
+          //                   onClick={() => submitPeerFeedback(r._id)}
+          //                   disabled={
+          //                     peerFeedbackSending[r._id] ||
+          //                     !peerFeedbackText[r._id]?.trim()
+          //                   }
+          //                   style={{
+          //                     ...s.publishBtn,
+          //                     padding: "0.6rem 1.25rem",
+          //                     fontSize: "0.875rem",
+          //                     whiteSpace: "nowrap",
+          //                     opacity: !peerFeedbackText[r._id]?.trim() ? 0.5 : 1,
+          //                   }}
+          //                 >
+          //                   {peerFeedbackSending[r._id]
+          //                     ? "Sending..."
+          //                     : "✉ Submit"}
+          //                 </button>
+          //               </div>
+          //             )}
+          //           </div>
+          //         ))}
+          //       </div>
+          //     )}
+          //     {/* Pending Routine / Routine for Approval */}
+          //     {pendingRoutines.length > 0 && (
+          //       <div style={s.outerCard}>
+          //         <h2 style={s.sectionTitle}>⏳ Routine for Approval</h2>
+          //         {pendingRoutines.map((r) => (
+          //           <div key={r._id} style={s.noticeCard}>
+          //             <div className="chairman-card-row">
+          //               <div style={{ flex: 1, minWidth: 0 }}>
+          //                 <h4
+          //                   style={{
+          //                     fontWeight: "700",
+          //                     color: "#1e293b",
+          //                     marginBottom: "0.3rem",
+          //                   }}
+          //                 >
+          //                   {r.title}
+          //                   <span
+          //                     style={{
+          //                       fontSize: "0.75rem",
+          //                       fontWeight: "normal",
+          //                       marginLeft: "0.5rem",
+          //                       padding: "0.2rem 0.5rem",
+          //                       borderRadius: "4px",
+          //                       background:
+          //                         r.status === "PENDING_FEEDBACK"
+          //                           ? "#fef3c7"
+          //                           : "#fed7aa",
+          //                       color:
+          //                         r.status === "PENDING_FEEDBACK"
+          //                           ? "#b45309"
+          //                           : "#c2410c",
+          //                     }}
+          //                   >
+          //                     {r.status.replace("_", " ")}
+          //                   </span>
+          //                 </h4>
+          //                 {r.content && (
+          //                   <p
+          //                     style={{
+          //                       color: "#64748b",
+          //                       fontSize: "0.9rem",
+          //                       margin: "0 0 0.5rem",
+          //                     }}
+          //                   >
+          //                     {r.content}
+          //                   </p>
+          //                 )}
+          //                 <div
+          //                   style={{
+          //                     display: "flex",
+          //                     gap: "0.75rem",
+          //                     flexWrap: "wrap",
+          //                     alignItems: "center",
+          //                   }}
+          //                 >
+          //                   {r.file_url && (
+          //                     <a
+          //                       href={r.file_url}
+          //                       target="_blank"
+          //                       rel="noopener noreferrer"
+          //                       style={s.attachBtn}
+          //                     >
+          //                       <FaPaperclip /> View Attached Document
+          //                     </a>
+          //                   )}
+          //                   {r.status === "PENDING_FEEDBACK" && (
+          //                     <button
+          //                       onClick={() => sendToChairman(r._id)}
+          //                       style={{
+          //                         ...s.publishBtn,
+          //                         padding: "0.4rem 1rem",
+          //                         fontSize: "0.8rem",
+          //                       }}
+          //                     >
+          //                       Send to Chairman
+          //                     </button>
+          //                   )}
+          //                 </div>
+          //                 {/* Show feedback on this routine */}
+          //                 {feedbackList.filter(
+          //                   (f) => f.target_announcement === r._id,
+          //                 ).length > 0 && (
+          //                   <div
+          //                     style={{
+          //                       marginTop: "0.75rem",
+          //                       padding: "0.75rem",
+          //                       background: "#f0f9ff",
+          //                       borderRadius: "8px",
+          //                       borderLeft: "3px solid #0ea5e9",
+          //                     }}
+          //                   >
+          //                     <div
+          //                       style={{
+          //                         fontSize: "0.8rem",
+          //                         fontWeight: "600",
+          //                         color: "#0369a1",
+          //                         marginBottom: "0.4rem",
+          //                       }}
+          //                     >
+          //                       Peer Feedback:
+          //                     </div>
+          //                     {feedbackList
+          //                       .filter((f) => f.target_announcement === r._id)
+          //                       .map((f) => (
+          //                         <div
+          //                           key={f._id}
+          //                           style={{
+          //                             fontSize: "0.85rem",
+          //                             color: "#334155",
+          //                             display: "flex",
+          //                             justifyContent: "space-between",
+          //                             alignItems: "flex-start",
+          //                             marginBottom: "0.3rem",
+          //                           }}
+          //                         >
+          //                           <div>
+          //                             <strong>
+          //                               {f.from_user?.full_name || "Anonymous"}:
+          //                             </strong>{" "}
+          //                             {f.message_content}
+          //                           </div>
+          //                           <button
+          //                             onClick={() => deleteFeedback(f._id)}
+          //                             style={s.deleteBtn}
+          //                           >
+          //                             <FaTrash size={11} />
+          //                           </button>
+          //                         </div>
+          //                       ))}
+          //                   </div>
+          //                 )}
+          //               </div>
+          //               <button
+          //                 onClick={() => deleteRoutine(r._id)}
+          //                 style={s.deleteBtn}
+          //               >
+          //                 <FaTrash />
+          //               </button>
+          //             </div>
+          //           </div>
+          //         ))}
+          //       </div>
+          //     )}
+          //     {/* Published / Approved Routines */}
+          //     <div style={s.outerCard}>
+          //       <h2 style={s.sectionTitle}>Published Routine</h2>
+          //       {publishedRoutines.length === 0 ? (
+          //         <p
+          //           style={{
+          //             color: "#94a3b8",
+          //             textAlign: "center",
+          //             fontStyle: "italic",
+          //           }}
+          //         >
+          //           No published routines yet.
+          //         </p>
+          //       ) : (
+          //         publishedRoutines.map((r) => (
+          //           <div key={r._id} style={s.noticeCard}>
+          //             <h4
+          //               style={{
+          //                 fontWeight: "700",
+          //                 color: "#1e293b",
+          //                 marginBottom: "0.3rem",
+          //               }}
+          //             >
+          //               {r.title}{" "}
+          //               {r.author?._id !== user.id && (
+          //                 <span
+          //                   style={{
+          //                     fontWeight: "normal",
+          //                     color: "#64748b",
+          //                     fontSize: "0.85rem",
+          //                   }}
+          //                 >
+          //                   — by {r.author?.full_name}
+          //                 </span>
+          //               )}
+          //             </h4>
+          //             {r.content && (
+          //               <p
+          //                 style={{
+          //                   color: "#64748b",
+          //                   fontSize: "0.9rem",
+          //                   margin: "0 0 0.5rem",
+          //                 }}
+          //               >
+          //                 {r.content}
+          //               </p>
+          //             )}
+          //             {r.file_url && (
+          //               <a
+          //                 href={r.file_url}
+          //                 target="_blank"
+          //                 rel="noopener noreferrer"
+          //                 style={s.attachBtn}
+          //               >
+          //                 <FaPaperclip /> View Attached Document
+          //               </a>
+          //             )}
+          //           </div>
+          //         ))
+          //       )}
+          //     </div>
+          //   </>
+          // )
+        }
         {/* ═══════ PROFILE TAB ═══════ */}
         {activeTab === "profile" && (
           <div style={s.outerCard}>

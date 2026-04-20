@@ -657,6 +657,13 @@ const AnnouncementSchema = new mongoose.Schema({
     target_audience: { type: String, enum: ['Student', 'Teacher', 'Everyone'], default: 'Everyone' },
     feedback: { type: String, default: '' },
     file_url: { type: String, default: null }, // URL for attached PDF/File
+
+    // NEW: Structured timetable for Routine Builder
+    timetable: {
+        type: Object,           // JSON object containing the full grid
+        default: null
+    },
+
     created_at: { type: Date, default: Date.now }
 });
 
@@ -984,8 +991,107 @@ router.put('/:id/status', auth, async (req, res) => {
     }
 });
 
-module.exports = router;
+// ADD THESE TWO ROUTES at the end of announcementRoutes.js (before module.exports)
+// ====================== NEW ROUTINE BUILDER ======================
 
+// @route   POST api/announcements/routine-builder
+router.post('/routine-builder', auth, async (req, res) => {
+    const { title, timetable, routineId } = req.body;
+
+    if (req.user.role !== 'TEACHER') {
+        return res.status(403).json({ msg: 'Only teachers can create/edit routines' });
+    }
+
+    try {
+        const pdfBuffer = await generateRoutinePDF(timetable, title || 'Weekly Routine');
+
+        // Upload PDF
+        const b64 = pdfBuffer.toString('base64');
+        const dataURI = `data:application/pdf;base64,${b64}`;
+        const uploadResult = await cloudinary.uploader.upload(dataURI, {
+            resource_type: 'raw',
+            folder: 'uni_connect_routines'
+        });
+
+        const routineData = {
+            title: title || 'Weekly Routine',
+            content: 'Interactive Routine Builder',
+            author: req.user.id,
+            type: 'ROUTINE',
+            timetable: timetable,
+            file_url: uploadResult.secure_url,
+            status: 'PENDING_FEEDBACK'
+        };
+
+        let saved;
+        if (routineId) {
+            const existing = await Announcement.findById(routineId);
+            if (!existing || existing.author.toString() !== req.user.id) {
+                return res.status(403).json({ msg: 'Not authorized to edit this routine' });
+            }
+            Object.assign(existing, routineData);
+            saved = await existing.save();
+        } else {
+            saved = await new Announcement(routineData).save();
+        }
+
+        res.json(saved);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server Error', error: err.message });
+    }
+});
+
+// ================== PDF GENERATOR (Working) ==================
+const generateRoutinePDF = async (timetable, title) => {
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([1000, 700]);
+    const { width, height } = page.getSize();
+    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const smallFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    // Header
+    page.drawText('University of Rajshahi', { x: 50, y: height - 60, size: 22, font, color: rgb(0, 0, 0) });
+    page.drawText('Department of Information and Communication Engineering', { x: 50, y: height - 90, size: 14, font: smallFont });
+    page.drawText(title, { x: 50, y: height - 120, size: 18, font, color: rgb(0.1, 0.1, 0.1) });
+    page.drawText(`Effective from ${new Date().toLocaleDateString()}`, { x: 50, y: height - 145, size: 11, font: smallFont });
+
+    let y = height - 200;
+
+    // Draw table
+    timetable.forEach(dayRow => {
+        // Day header
+        page.drawText(dayRow.day, { x: 50, y, size: 16, font, color: rgb(0.05, 0.3, 0.6) });
+        y -= 30;
+
+        dayRow.semesterRows.forEach(semRow => {
+            // Semester
+            page.drawText(semRow.semester, { x: 50, y, size: 11, font: smallFont });
+            y -= 25;
+
+            // Slots
+            semRow.slots.forEach((slot, i) => {
+                const x = 180 + i * 120;
+                let text = slot.course || '';
+                if (slot.teacher) text += `\n${slot.teacher}`;
+                if (slot.room) text += ` (${slot.room})`;
+
+                if (slot.status === 'CANCELLED') {
+                    page.drawText('CANCELLED', { x, y, size: 10, font, color: rgb(0.9, 0.2, 0.2) });
+                } else {
+                    page.drawText(text, { x, y, size: 9, font: smallFont, color: rgb(0, 0, 0) });
+                }
+            });
+            y -= 18;
+        });
+        y -= 10;
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
+};
+
+module.exports = router;
 // End of file
 
 // Start of: ./server\routes\authRoutes.js
