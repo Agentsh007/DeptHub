@@ -28,9 +28,9 @@ import NoticeDetail from "../../components/NoticeDetail";
 import Notice from "../../components/Notice";
 import s from "../../utils/teacherDashboard";
 import RoutineGrid from "./RoutineGrid";
-import { Edit2, Paperclip, Save, Trash2, Trash
-  
- } from "lucide-react";
+import MyRoutines from "./MyRoutines";
+import PeerReviewPanel from "./PeerReviewPanel";
+import { Save, Trash2, X } from "lucide-react";
 
 // ── Common ICE/CSE course code suggestions ──
 const COURSE_SUGGESTIONS = [
@@ -82,26 +82,6 @@ const getFileIcon = (filename) => {
   return <FaFileAlt size={36} color="#64748b" />;
 };
 
-// ── Status badge ──
-const StatusBadge = ({ status }) => {
-  const map = {
-    PENDING_FEEDBACK: { bg: "#fef3c7", color: "#b45309", label: "Peer Review" },
-    PENDING_APPROVAL: { bg: "#fed7aa", color: "#c2410c", label: "Awaiting Approval" },
-    APPROVED: { bg: "#dcfce7", color: "#16a34a", label: "Approved" },
-    REJECTED: { bg: "#fee2e2", color: "#dc2626", label: "Rejected" },
-  };
-  const st = map[status] || { bg: "#f1f5f9", color: "#64748b", label: status };
-  return (
-    <span style={{
-      background: st.bg, color: st.color,
-      fontSize: "0.72rem", fontWeight: "700",
-      padding: "0.2rem 0.6rem", borderRadius: "999px",
-    }}>
-      {st.label}
-    </span>
-  );
-};
-
 const TeacherDashboard = () => {
   const { user, loadUser, loading: authLoading } = useContext(AuthContext);
   const location = useLocation();
@@ -134,6 +114,12 @@ const TeacherDashboard = () => {
   const [allTeachers, setAllTeachers] = useState([]); 
   const [routineSubmitting, setRoutineSubmitting] = useState(false);
   const [routineMsg, setRoutineMsg] = useState(null);
+  const [routineView, setRoutineView] = useState("dashboard"); // "dashboard" | "builder" | "peer-review"
+
+  // ── Peer Review State ──
+  const [peerRoutines, setPeerRoutines] = useState([]);        // other teachers' PENDING_FEEDBACK routines
+  const [feedbacksMap, setFeedbacksMap] = useState({});        // { routineId: Feedback[] } for own routines
+  const [peerFeedbacksMap, setPeerFeedbacksMap] = useState({}); // { routineId: Feedback[] } for peer panel
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -202,6 +188,7 @@ const TeacherDashboard = () => {
       initializeGrid();
       fetchPreviousRoutines();
       fetchAllTeachers();
+      fetchPeerRoutines();
     }
   }, [activeTab]);
  
@@ -251,7 +238,66 @@ const TeacherDashboard = () => {
         (a) => a.type === "ROUTINE" && a.author?._id === user.id
       );
       setPreviousRoutines(routines);
+      // Also fetch peer feedback for each of own routines
+      fetchFeedbacksForOwnRoutines(routines);
     } catch (err) { console.error(err); }
+  };
+
+  // Fetch peer feedback received on the current teacher's own routines
+  const fetchFeedbacksForOwnRoutines = async (routines) => {
+    const map = {};
+    await Promise.all(
+      routines.map(async (r) => {
+        try {
+          const res = await axios.get(`/feedback?target_announcement_id=${r._id}`);
+          map[r._id] = res.data;
+        } catch { map[r._id] = []; }
+      })
+    );
+    setFeedbacksMap(map);
+  };
+
+  // Fetch routines from OTHER teachers that are awaiting peer review
+  const fetchPeerRoutines = async () => {
+    try {
+      const res = await axios.get("/announcements");
+      const peers = res.data.filter(
+        (a) => a.type === "ROUTINE" &&
+               a.status === "PENDING_FEEDBACK" &&
+               a.author?._id !== user.id
+      );
+      setPeerRoutines(peers);
+      // Fetch existing feedback for each peer routine
+      const map = {};
+      await Promise.all(
+        peers.map(async (r) => {
+          try {
+            const fb = await axios.get(`/feedback?target_announcement_id=${r._id}`);
+            map[r._id] = fb.data;
+          } catch { map[r._id] = []; }
+        })
+      );
+      setPeerFeedbacksMap(map);
+    } catch (err) { console.error(err); }
+  };
+
+  // Submit peer feedback on another teacher's routine
+  const submitPeerFeedback = async (routineId, message, isAnonymous) => {
+    await axios.post("/feedback", {
+      message_content: message,
+      is_anonymous: isAnonymous,
+      target_announcement: routineId,
+    });
+    // Refresh feedback for that routine
+    const res = await axios.get(`/feedback?target_announcement_id=${routineId}`);
+    setPeerFeedbacksMap((prev) => ({ ...prev, [routineId]: res.data }));
+  };
+
+  // Delete peer feedback
+  const deletePeerFeedback = async (feedbackId, routineId) => {
+    await axios.delete(`/feedback/${feedbackId}`);
+    const res = await axios.get(`/feedback?target_announcement_id=${routineId}`);
+    setPeerFeedbacksMap((prev) => ({ ...prev, [routineId]: res.data }));
   };
 
   useEffect(() => {
@@ -261,7 +307,8 @@ const TeacherDashboard = () => {
     if (activeTab === "routine") {
       initializeTimetable();
       fetchPreviousRoutines();
-      fetchAllTeachers(); // ✅ NEW
+      fetchAllTeachers();
+      fetchPeerRoutines();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -317,9 +364,10 @@ const TeacherDashboard = () => {
     try {
       await axios.post("/announcements/routine-builder", {
         title: `Weekly Routine – ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`,
-        timetable: timetableData,
+        timetable: gridState,
         routineId: editingRoutineId,
       });
+      console.log(gridState)
       setRoutineMsg({
         text: editingRoutineId
           ? "✅ Routine updated! PDF regenerated and sent for review."
@@ -340,10 +388,10 @@ const TeacherDashboard = () => {
   const handleEditRoutine = (routine) => {
     setEditingRoutineId(routine._id);
     setRoutineMsg(null);
-    if (Array.isArray(routine.timetable) && routine.timetable.length > 0) {
-      setTimetableData(routine.timetable);
+    if (routine.timetable && routine.timetable.columns && routine.timetable.cells) {
+      setGridState(routine.timetable);
     } else {
-      initializeTimetable();
+      initializeGrid();
     }
     // Scroll to grid
     setTimeout(() => {
@@ -369,6 +417,23 @@ const TeacherDashboard = () => {
           fetchPreviousRoutines();
           if (editingRoutineId === id) cancelEditing();
         } catch { alert("Delete failed"); }
+        finally { closeConfirmModal(); }
+      },
+    });
+  };
+
+  const sendForApproval = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Send for Approval?",
+      message: "This will submit the routine to the Chairman for final approval. You won't be able to edit it until reviewed.",
+      isDanger: false,
+      onConfirm: async () => {
+        try {
+          await axios.put(`/announcements/${id}/status`, { status: "PENDING_APPROVAL" });
+          setRoutineMsg({ text: "✅ Routine sent to Chairman for approval.", type: "success" });
+          fetchPreviousRoutines();
+        } catch { alert("Failed to send for approval."); }
         finally { closeConfirmModal(); }
       },
     });
@@ -628,58 +693,208 @@ const TeacherDashboard = () => {
           />
         )}
 
-        {/* ═══════ ROUTINE BUILDER TAB ═══════ */}
+        {/* ═══════ ROUTINE TAB ═══════ */}
         {activeTab === "routine" && (
-          <div style={s.outerCard}>
-            <h2 style={s.sectionTitle}>📅 Routine Builder</h2>
-            <div style={{ marginBottom: "2rem" }}>
-              <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", marginBottom: "1rem" }}>Your Previous Routines</h3>
-              {previousRoutines.length === 0 ? (
-                <p style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "0.9rem" }}>No routines yet. Create your first one below.</p>
-              ) : (
-                previousRoutines.map((r) => (
-                  <div key={r._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: editingRoutineId === r._id ? "#eff6ff" : "#f8fafc", border: editingRoutineId === r._id ? "1.5px solid #3b82f6" : "1px solid #e2e8f0", padding: "1rem 1.5rem", borderRadius: "12px", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.75rem" }}>
-                    <div>
-                      <div style={{ fontWeight: "700", color: "#1e293b", marginBottom: "0.25rem" }}>
-                        {r.title}
-                        {editingRoutineId === r._id && <span style={{ marginLeft: "0.5rem", fontSize: "0.75rem", color: "#3b82f6", fontWeight: "600" }}>[Currently Editing]</span>}
-                      </div>
-                      <div style={{ fontSize: "0.8rem", color: "#64748b", display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                        {new Date(r.created_at).toLocaleDateString()}
-                        <StatusBadge status={r.status} />
-                      </div>
-                      {r.feedback && <div style={{ fontSize: "0.8rem", color: "#b45309", marginTop: "0.25rem", fontStyle: "italic" }}>Feedback: {r.feedback}</div>}
+          <div>
+            {/* ── Sub-tab Toggle Bar ── */}
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+              {[
+                { key: "dashboard",   label: "📋 My Routines",  count: previousRoutines.length },
+                { key: "peer-review", label: "👥 Peer Review",   count: peerRoutines.length },
+                { key: "builder",     label: "🛠️ Routine Builder" },
+              ].map(({ key, label, count }) => {
+                const active = routineView === key;
+                const isPeer = key === "peer-review";
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setRoutineView(key);
+                      // Refresh peer panel data each time it's opened
+                      if (key === "peer-review") fetchPeerRoutines();
+                    }}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: "0.4rem",
+                      padding: "0 1.25rem", height: "36px", borderRadius: "8px",
+                      fontWeight: "600", fontSize: "0.82rem", cursor: "pointer",
+                      border: active
+                        ? `1.5px solid ${isPeer ? "#8b5cf6" : "#3b82f6"}`
+                        : "1px solid #e2e8f0",
+                      background: active
+                        ? (isPeer ? "#f5f3ff" : "#eff6ff")
+                        : "#f8fafc",
+                      color: active
+                        ? (isPeer ? "#6d28d9" : "#2563eb")
+                        : "#64748b",
+                      boxShadow: active
+                        ? `0 1px 4px ${isPeer ? "rgba(139,92,246,0.15)" : "rgba(59,130,246,0.15)"}`
+                        : "none",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {label}
+                    {count > 0 && (
+                      <span style={{
+                        fontSize: "0.68rem", fontWeight: "700",
+                        background: active ? (isPeer ? "#ede9fe" : "#dbeafe") : "#e2e8f0",
+                        color: active ? (isPeer ? "#5b21b6" : "#1d4ed8") : "#64748b",
+                        padding: "0.05rem 0.45rem", borderRadius: "999px",
+                      }}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={s.outerCard}>
+
+              {/* ── PANEL 1: My Submitted Routines ── */}
+              {routineView === "dashboard" && (
+                <section>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1.25rem" }}>
+                    <div style={{ width: "3px", height: "18px", borderRadius: "2px", background: "linear-gradient(135deg, #3b82f6, #6366f1)" }} />
+                    <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", margin: 0 }}>
+                      My Submitted Routines
+                    </h3>
+                  </div>
+
+                  {routineMsg && (
+                    <div style={{
+                      padding: "0.85rem 1.25rem", borderRadius: "10px", marginBottom: "1rem",
+                      background: routineMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                      color: routineMsg.type === "success" ? "#166534" : "#991b1b",
+                      fontWeight: "500", fontSize: "0.9rem",
+                    }}>
+                      {routineMsg.text}
                     </div>
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      {r.file_url && <a href={r.file_url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.4rem 0.9rem", background: "#fff7ed", color: "#b45309", border: "1px solid #fed7aa", borderRadius: "7px", fontSize: "0.8rem", fontWeight: "600", textDecoration: "none" }}><Paperclip size={11} /> View PDF</a>}
-                      <button onClick={() => handleEditRoutine(r)} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", background: "#eff6ff", color: "#2563eb", padding: "0.4rem 0.9rem", borderRadius: "7px", border: "1px solid #bfdbfe", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600" }}><Edit2 size={11} /> Edit</button>
-                      <button onClick={() => deleteRoutine(r._id)} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", background: "#fef2f2", color: "#ef4444", padding: "0.4rem 0.9rem", borderRadius: "7px", border: "1px solid #fecaca", cursor: "pointer", fontSize: "0.8rem", fontWeight: "600" }}><Trash2 size={11} /></button>
+                  )}
+
+                  <MyRoutines
+                    routines={previousRoutines}
+                    editingRoutineId={editingRoutineId}
+                    onEdit={(r) => { handleEditRoutine(r); setRoutineView("builder"); }}
+                    onDelete={deleteRoutine}
+                    onSendForApproval={sendForApproval}
+                    feedbacksMap={feedbacksMap}
+                  />
+
+                  <div style={{ marginTop: "1.75rem", textAlign: "center" }}>
+                    <button
+                      onClick={() => setRoutineView("builder")}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "0.4rem",
+                        padding: "0.55rem 1.5rem", borderRadius: "8px", fontWeight: "700",
+                        background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+                        color: "white", border: "none", cursor: "pointer", fontSize: "0.85rem",
+                        boxShadow: "0 2px 6px rgba(22,163,74,0.25)",
+                      }}
+                    >
+                      ➕ Create New Routine
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* ── PANEL 2: Peer Review ── */}
+              {routineView === "peer-review" && (
+                <section>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1.25rem" }}>
+                    <div style={{ width: "3px", height: "18px", borderRadius: "2px", background: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }} />
+                    <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", margin: 0 }}>
+                      Peer Review
+                    </h3>
+                    {peerRoutines.length > 0 && (
+                      <span style={{
+                        fontSize: "0.72rem", fontWeight: "700", color: "#6d28d9",
+                        background: "#ede9fe", border: "1px solid #c4b5fd",
+                        padding: "0.1rem 0.55rem", borderRadius: "999px",
+                      }}>
+                        {peerRoutines.length} awaiting review
+                      </span>
+                    )}
+                  </div>
+
+                  <PeerReviewPanel
+                    peerRoutines={peerRoutines}
+                    currentUserId={user.id}
+                    feedbacksMap={peerFeedbacksMap}
+                    onSubmitFeedback={submitPeerFeedback}
+                    onDeleteFeedback={deletePeerFeedback}
+                  />
+                </section>
+              )}
+
+              {/* ── PANEL 3: Routine Builder ── */}
+              {routineView === "builder" && (
+                <section id="routine-grid">
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                    <div style={{ width: "3px", height: "18px", borderRadius: "2px", background: "linear-gradient(135deg, #16a34a, #15803d)" }} />
+                    <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", margin: 0 }}>
+                      {editingRoutineId ? "✏️ Editing Routine" : "➕ Create New Routine"}
+                    </h3>
+                    <div style={{
+                      marginLeft: "auto", fontSize: "0.75rem", color: "#94a3b8",
+                      background: "#f8fafc", padding: "0.35rem 0.8rem",
+                      borderRadius: "8px", border: "1px solid #e2e8f0",
+                    }}>
+                      💡 Click &amp; Drag to select cells · Double‑click to edit
                     </div>
                   </div>
-                ))
+
+                  {routineMsg && (
+                    <div style={{
+                      padding: "0.85rem 1.25rem", borderRadius: "10px", marginBottom: "1rem",
+                      background: routineMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                      color: routineMsg.type === "success" ? "#166534" : "#991b1b",
+                      fontWeight: "500", fontSize: "0.9rem",
+                    }}>
+                      {routineMsg.text}
+                    </div>
+                  )}
+
+                  <RoutineGrid
+                    gridState={gridState}
+                    setGridState={setGridState}
+                    allTeachers={allTeachers}
+                  />
+
+                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1.5rem", flexWrap: "wrap" }}>
+                    {editingRoutineId && (
+                      <button
+                        onClick={() => { cancelEditing(); setRoutineView("dashboard"); }}
+                        style={{
+                          padding: "0 1.25rem", height: "36px", borderRadius: "8px", fontWeight: "600",
+                          background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0",
+                          cursor: "pointer", fontSize: "0.82rem",
+                          display: "flex", alignItems: "center", gap: "0.35rem",
+                        }}
+                      >
+                        <X size={12} /> Cancel
+                      </button>
+                    )}
+                    <button
+                      onClick={submitRoutine}
+                      disabled={routineSubmitting}
+                      style={{
+                        padding: "0 1.5rem", height: "36px", borderRadius: "8px", fontWeight: "700",
+                        background: routineSubmitting
+                          ? "#86efac"
+                          : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+                        color: "white", border: "none",
+                        cursor: routineSubmitting ? "default" : "pointer",
+                        fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "0.35rem",
+                        boxShadow: "0 2px 6px rgba(22,163,74,0.25)",
+                      }}
+                    >
+                      <Save size={13} />
+                      {routineSubmitting ? "Generating PDF..." : editingRoutineId ? "Update Routine" : "Submit Routine"}
+                    </button>
+                  </div>
+                </section>
               )}
-            </div>
 
-            <div id="routine-grid">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.75rem" }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", margin: 0 }}>
-                  {editingRoutineId ? "✏️ Editing Routine" : "➕ Create New Routine"}
-                </h3>
-                <div style={{ fontSize: "0.78rem", color: "#94a3b8", background: "#f8fafc", padding: "0.35rem 0.8rem", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                  💡 Click & Drag to select multiple cells • Double Click to edit content
-                </div>
-              </div>
-
-              {routineMsg && <div style={{ padding: "0.85rem 1.25rem", borderRadius: "10px", marginBottom: "1rem", background: routineMsg.type === "success" ? "#dcfce7" : "#fee2e2", color: routineMsg.type === "success" ? "#166534" : "#991b1b", fontWeight: "500", fontSize: "0.9rem" }}>{routineMsg.text}</div>}
-
-              {/* INTEGRATED ROUTINE GRID MODULE */}
-              <RoutineGrid gridState={gridState} setGridState={setGridState} allTeachers={allTeachers} />
-
-            </div>
-
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1.5rem", flexWrap: "wrap" }}>
-              {editingRoutineId && <button onClick={cancelEditing} style={{ padding: "0 1.25rem", borderRadius: "8px", fontWeight: "600", background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0", cursor: "pointer", fontSize: "0.82rem", height: "36px", display: "flex", alignItems: "center", gap: "0.35rem" }}><X size={12} /> Cancel</button>}
-              <button onClick={submitRoutine} disabled={routineSubmitting} style={{ padding: "0 1.5rem", borderRadius: "8px", fontWeight: "700", background: routineSubmitting ? "#86efac" : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)", color: "white", border: "none", cursor: routineSubmitting ? "default" : "pointer", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "0.35rem", boxShadow: "0 2px 6px rgba(22,163,74,0.25)", height: "36px" }}><Save size={13} /> {routineSubmitting ? "Generating PDF..." : editingRoutineId ? "Update Routine" : "Submit Routine"}</button>
             </div>
           </div>
         )}

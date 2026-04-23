@@ -41,145 +41,145 @@ const PDF_YEAR_GROUPS = [
     { year: 'MSc', count: 1 },
 ];
 
+const hexToRgb = (hex) => {
+    if (!hex || hex === 'transparent') return rgb(1, 1, 1);
+    hex = hex.replace(/^#/, '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const bigint = parseInt(hex, 16);
+    return rgb(((bigint >> 16) & 255) / 255, ((bigint >> 8) & 255) / 255, (bigint & 255) / 255);
+};
+
 const generateRoutinePDF = async (timetable, title) => {
+    const isLegacy = Array.isArray(timetable);
+    // console.log(timetable.cells[3]);
+    const grid = isLegacy ? { columns: [], rows: [], cells: [] } : timetable;
+
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([1200, 900]);
     const { width, height } = page.getSize();
     const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-    // ── Column layout ──
-    const CW = { day: 38, year: 36, sem: 92, slot: 138, brk: 28 };
-    const totalW = CW.day + CW.year + CW.sem + CW.slot * 6 + CW.brk;
-    const originX = Math.floor((width - totalW) / 2);
-    const colX = [originX];
-    [CW.day, CW.year, CW.sem, CW.slot, CW.slot, CW.slot, CW.brk, CW.slot, CW.slot, CW.slot].forEach(w => colX.push(colX[colX.length - 1] + w));
-    const colW = [CW.day, CW.year, CW.sem, CW.slot, CW.slot, CW.slot, CW.brk, CW.slot, CW.slot, CW.slot];
-    const ROWS_PER_DAY = 6;
-    const ROW_H = 24;
-    const HDR_H = 30;
-
-    // ── Centered text helper ──
+    const resolveBg = (color, fallback) => (!color || color === 'transparent') ? fallback : color;  
+    // Header layout
     const centerText = (text, y, size, f, color) => {
         const tw = f.widthOfTextAtSize(text, size);
         page.drawText(text, { x: (width - tw) / 2, y, size, font: f, color });
     };
-
-    // ── Header ──
     centerText('University of Rajshahi', height - 28, 16, bold, rgb(0.05, 0.12, 0.42));
     centerText('Department of Information and Communication Engineering', height - 46, 11, bold, rgb(0.12, 0.12, 0.12));
     const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     centerText('[Effective From ' + dateStr + ']', height - 61, 9, font, rgb(0.35, 0.35, 0.35));
 
-    // ── Table header row ──
-    const tableTop = height - 78;
-    page.drawRectangle({ x: colX[0], y: tableTop - HDR_H, width: totalW, height: HDR_H, color: rgb(0.06, 0.15, 0.38) });
+    if (isLegacy || !grid.columns) return Buffer.from(await pdfDoc.save());
 
-    const hdrLabels = ['Day', 'Year', 'Semester',
-        '09:05 AM -|10:00 AM', '10:05 AM -|11:00 AM', '11:05 AM -|12:00 PM',
-        'BREAK|12-1PM',
-        '01:00 PM -|2:00 PM', '2:05 PM -|3:00 PM', '3:05 PM -|4:00 PM'];
+    // Grid Scaling Calculations
+    const ROW_H = 26;
+    const originX = 30; 
+    const colW = [45, 45, 95, ...grid.columns.map(() => 105)];
+    const colX = [originX];
+    colW.forEach((w, i) => colX.push(colX[i] + w));
+    const totalW = colX[colX.length - 1] - originX;
+    
+    // Calculate Grid Height Offset
+    const tableTop = height - 85;
 
-    hdrLabels.forEach((label, ci) => {
-        const lines = label.split('|');
-        const fs = ci === 6 ? 5 : 6.5;
-        lines.forEach((line, li) => {
-            const lw = bold.widthOfTextAtSize(line, fs);
-            const tx = colX[ci] + (colW[ci] - lw) / 2;
-            const ty = lines.length === 1
-                ? tableTop - HDR_H / 2 - 3
-                : tableTop - 10 - li * 11;
-            page.drawText(line, { x: Math.max(tx, colX[ci] + 2), y: ty, size: fs, font: bold, color: rgb(1, 1, 1) });
-        });
-    });
-
-    // ── Data rows ──
-    let y = tableTop - HDR_H;
-    const slotColIdx = [3, 4, 5, 7, 8, 9];
-
-    (timetable || []).forEach((dayRow) => {
-        const dayH = ROWS_PER_DAY * ROW_H;
-
-        // Day cell background + text
-        page.drawRectangle({ x: colX[0], y: y - dayH, width: CW.day, height: dayH, color: rgb(0.88, 0.93, 1) });
-        const dayTW = bold.widthOfTextAtSize(dayRow.day, 9);
-        page.drawText(dayRow.day, { x: colX[0] + (CW.day - dayTW) / 2, y: y - dayH / 2 - 3, size: 9, font: bold, color: rgb(0.05, 0.2, 0.55) });
-
-        // Break column background + vertical text
-        page.drawRectangle({ x: colX[6], y: y - dayH, width: CW.brk, height: dayH, color: rgb(1, 0.96, 0.93) });
-        const brkText = 'BREAK';
-        for (let bi = 0; bi < brkText.length; bi++) {
-            const ch = brkText[bi];
-            const chW = bold.widthOfTextAtSize(ch, 5.5);
-            page.drawText(ch, { x: colX[6] + (CW.brk - chW) / 2, y: y - dayH / 2 + 16 - bi * 7, size: 5.5, font: bold, color: rgb(0.7, 0.15, 0.15) });
+    // Helper block
+    const drawCell = (x, y, w, h, bgHex, cellStrData, isHdr = false) => {
+        const isDark = bgHex.toLowerCase() === '#1e293b';
+        const safeBg = resolveBg(bgHex, '#ffffff');
+       try {
+        page.drawRectangle({ x, y: y - h, width: w, height: h, color: hexToRgb(safeBg) });
+        } catch (e) {
+        page.drawRectangle({ x, y: y - h, width: w, height: h, color: rgb(1, 1, 1) });
         }
-        const timeStr = '12-1PM';
-        const tmW = font.widthOfTextAtSize(timeStr, 4.5);
-        page.drawText(timeStr, { x: colX[6] + (CW.brk - tmW) / 2, y: y - dayH / 2 - 25, size: 4.5, font: font, color: rgb(0.5, 0.25, 0.25) });
+        page.drawLine({ start: { x, y: y - h }, end: { x: x + w, y: y - h }, thickness: 0.5, color: rgb(0.7,0.7,0.7) });
+        page.drawLine({ start: { x, y: y }, end: { x: x + w, y: y }, thickness: 0.5, color: rgb(0.7,0.7,0.7) });
+        page.drawLine({ start: { x, y: y - h }, end: { x, y }, thickness: 0.5, color: rgb(0.7,0.7,0.7) });
+        page.drawLine({ start: { x: x + w, y: y - h }, end: { x: x + w, y }, thickness: 0.5, color: rgb(0.7,0.7,0.7) });
 
-        // Year-grouped semester rows
-        let rowY = y;
-        let semIdx = 0;
-        PDF_YEAR_GROUPS.forEach(({ year: yr, count: cnt }) => {
-            const groupH = cnt * ROW_H;
-            // Year cell
-            page.drawRectangle({ x: colX[1], y: rowY - groupH, width: CW.year, height: groupH, color: rgb(0.93, 0.96, 1) });
-            const yrTW = bold.widthOfTextAtSize(yr, 7.5);
-            page.drawText(yr, { x: colX[1] + (CW.year - yrTW) / 2, y: rowY - groupH / 2 - 3, size: 7.5, font: bold, color: rgb(0.12, 0.25, 0.55) });
+        if (!cellStrData) return;
+        
+        if (cellStrData.status === 'CANCELLED') {
+             const tw = bold.widthOfTextAtSize('CANCELLED', 6.5);
+             page.drawText('CANCELLED', { x: x + (w - tw)/2, y: y - (h/2) + 2, size: 6.5, font: bold, color: rgb(0.85, 0.1, 0.1) });
+             if (cellStrData.reason) {
+                 const rw = font.widthOfTextAtSize(cellStrData.reason, 5);
+                 page.drawText(cellStrData.reason.slice(0, 30), { x: x + (w - Math.min(rw, w-4))/2, y: y - (h/2) - 6, size: 5, font: font, color: rgb(0.6, 0.2, 0.2) });
+             }
+             return;
+        }
 
-            for (let gi = 0; gi < cnt; gi++) {
-                const sr = (dayRow.semesterRows || [])[semIdx];
-                const cellTop = rowY - gi * ROW_H;
+        let rawTexts = [];
+        if (typeof cellStrData === 'string') {
+            rawTexts.push(cellStrData);
+        } else if (cellStrData.course) {
+            rawTexts.push(cellStrData.course);
+            if (cellStrData.teacher || cellStrData.room) Object.keys(cellStrData).length && rawTexts.push(`[${cellStrData.teacher || ''}] (${cellStrData.room || ''})`);
+        } else if (cellStrData.value) {
+            rawTexts.push(cellStrData.value);
+        }
 
-                if (sr) {
-                    // Semester label
-                    const semLabel = (sr.semester || '').slice(0, 18);
-                    page.drawText(semLabel, { x: colX[2] + 3, y: cellTop - 15, size: 6, font: font, color: rgb(0.25, 0.25, 0.25) });
-
-                    // Time slot cells
-                    (sr.slots || []).forEach((slot, si) => {
-                        const ci = slotColIdx[si];
-                        const sx = colX[ci];
-                        if (slot.status === 'CANCELLED') {
-                            page.drawRectangle({ x: sx + 1, y: cellTop - ROW_H + 1, width: colW[ci] - 2, height: ROW_H - 2, color: rgb(1, 0.94, 0.94) });
-                            page.drawText('CANCELLED', { x: sx + 3, y: cellTop - 11, size: 5.5, font: bold, color: rgb(0.85, 0.08, 0.08) });
-                            if (slot.reason) {
-                                page.drawText(slot.reason.slice(0, 20), { x: sx + 3, y: cellTop - 19, size: 4.5, font: font, color: rgb(0.55, 0.18, 0.18) });
-                            }
-                        } else if (slot.course) {
-                            page.drawText(slot.course.slice(0, 18), { x: sx + 3, y: cellTop - 10, size: 6.5, font: bold, color: rgb(0.05, 0.15, 0.45) });
-                            let detail = '';
-                            if (slot.teacher) detail += '[' + slot.teacher + ']';
-                            if (slot.room) detail += '(' + slot.room + ')';
-                            if (detail) page.drawText(detail.slice(0, 24), { x: sx + 3, y: cellTop - 19, size: 5, font: font, color: rgb(0.3, 0.3, 0.3) });
-                        }
-                    });
-                }
-                // Row divider
-                page.drawLine({ start: { x: colX[1], y: cellTop - ROW_H }, end: { x: colX[10], y: cellTop - ROW_H }, thickness: 0.3, color: rgb(0.82, 0.82, 0.82) });
-                semIdx++;
+        const lines = [];
+        rawTexts.forEach(text => {
+            if (text) {
+                // Split by \n and by | to support legacy breaks and UI line breaks
+                const parts = text.toString().split(/[\n|]/);
+                lines.push(...parts);
             }
-            // Year group border
-            page.drawLine({ start: { x: colX[1], y: rowY - groupH }, end: { x: colX[10], y: rowY - groupH }, thickness: 0.6, color: rgb(0.7, 0.7, 0.7) });
-            rowY -= groupH;
         });
 
-        // Day separator
-        page.drawLine({ start: { x: colX[0], y: y - dayH }, end: { x: colX[10], y: y - dayH }, thickness: 1.2, color: rgb(0.35, 0.35, 0.35) });
-        y -= dayH;
+        let ty = y - (h/2) + ((lines.length - 1) * 4.5);
+        lines.forEach(l => {
+            if (!l) return;
+            // Clean up any remaining invalid characters that pdf-lib might choke on
+            const cleanStr = l.replace(/[\r\n\t]/g, '');
+            if (!cleanStr) return;
+            const fs = isHdr ? 7 : 6.5;
+            const lw = bold.widthOfTextAtSize(cleanStr, fs);
+            page.drawText(cleanStr, { x: x + (w - lw)/2, y: ty - 2, size: fs, font: isHdr ? bold : font, color: isDark ? rgb(1,1,1) : rgb(0.1,0.1,0.1) });
+            ty -= 10;
+        });
+    };
+
+    // Draw Column Headers (Top Row)
+    ['Day', 'Year', 'Semester'].forEach((lbl, i) => {
+        drawCell(colX[i], tableTop, colW[i], ROW_H, '#1e293b', { value: lbl }, true);
+    });
+    grid.columns.forEach((col, i) => {
+        if (!col || col.hidden) return;
+        const colVal = typeof col === 'object' ? col : { value: col };
+        const w = colW.slice(i + 3, i + 3 + (col.colSpan || 1)).reduce((a,b)=>a+b, 0);
+        // Column headers:
+        drawCell(colX[i+3], tableTop, w, ROW_H * (col.rowSpan || 1), resolveBg(col.bgColor, '#1e293b'), colVal, true);
     });
 
-    // ── Vertical column lines ──
-    const tableBottom = y;
-    colX.forEach((x) => {
-        page.drawLine({ start: { x, y: tableTop }, end: { x, y: tableBottom }, thickness: 0.5, color: rgb(0.65, 0.65, 0.65) });
-    });
+    let currentY = tableTop - ROW_H;
 
-    // ── Outer border ──
-    page.drawLine({ start: { x: colX[0], y: tableTop }, end: { x: colX[10], y: tableTop }, thickness: 1.5, color: rgb(0.2, 0.2, 0.2) });
-    page.drawLine({ start: { x: colX[0], y: tableBottom }, end: { x: colX[10], y: tableBottom }, thickness: 1.5, color: rgb(0.2, 0.2, 0.2) });
-    page.drawLine({ start: { x: colX[0], y: tableTop }, end: { x: colX[0], y: tableBottom }, thickness: 1.5, color: rgb(0.2, 0.2, 0.2) });
-    page.drawLine({ start: { x: colX[10], y: tableTop }, end: { x: colX[10], y: tableBottom }, thickness: 1.5, color: rgb(0.2, 0.2, 0.2) });
+    // Draw Data Rows & Row Headers
+    grid.rows.forEach((row, ri) => {
+        ['day', 'year', 'sem'].forEach((key, ci) => {
+            let cell = row[key];
+            if (!cell) return;
+            if (typeof cell === 'string') cell = { value: cell };
+            if (cell.hidden) return;
+            
+            const h = ROW_H * (cell.rowSpan || 1);
+            const w = colW.slice(ci, ci + (cell.colSpan || 1)).reduce((a,b)=>a+b, 0);
+            // Row headers:
+            drawCell(colX[ci], currentY, w, h, resolveBg(cell.bgColor, '#f1f5f9'), cell, true);
+
+        });
+
+        const rCells = grid.cells[ri] || [];
+        rCells.forEach((cell, ci) => {
+            if (!cell || cell.hidden) return;
+            const h = ROW_H * (cell.rowSpan || 1);
+            const w = colW.slice(ci + 3, ci + 3 + (cell.colSpan || 1)).reduce((a,b)=>a+b, 0);
+            // Data cells:
+            drawCell(colX[ci+3], currentY, w, h, resolveBg(cell.bgColor, '#ffffff'), cell, false);
+        });
+        currentY -= ROW_H;
+    });
 
     return Buffer.from(await pdfDoc.save());
 };
@@ -410,37 +410,37 @@ router.get('/supervision/today', auth, async (req, res) => {
         const cancelled = [];
 
         for (const routine of approvedRoutines) {
-            if (!Array.isArray(routine.timetable)) continue;
-            const dayRow = routine.timetable.find(d => d.day === today);
-            if (!dayRow) continue;
+            const grid = routine.timetable;
+            if (!grid || !grid.rows || !grid.cells) continue;
+            
+            grid.rows.forEach((row, rIdx) => {
+                const rowDay = typeof row.day === 'object' ? row.day.value : row.day;
+                if ((rowDay||"").toUpperCase() === today) {
+                    const year = typeof row.year === 'object' ? row.year.value : row.year;
+                    const sem = typeof row.sem === 'object' ? row.sem.value : row.sem;
+                    
+                    grid.cells[rIdx].forEach((cell, cIdx) => {
+                       if (cIdx >= grid.columns.length) return; 
+                       const colSlot = grid.columns[cIdx];
+                       const timeSlot = typeof colSlot === 'object' ? colSlot.value : colSlot;
+                       if ((timeSlot||'').toLowerCase().includes('break')) return;
 
-            for (const semRow of (dayRow.semesterRows || [])) {
-                (semRow.slots || []).forEach((slot, idx) => {
-                    const entry = {
-                        year: semRow.year || '',
-                        semester: semRow.semester,
-                        timeSlot: TIME_SLOTS[idx] || `Slot ${idx + 1}`,
-                        course: slot.course,
-                        teacher: slot.teacher,
-                        room: slot.room,
-                        status: slot.status,
-                        reason: slot.reason,
-                        routineTitle: routine.title,
-                        routineAuthor: routine.author?.full_name,
-                        routineId: routine._id,
-                    };
-
-                    if (slot.status === 'CANCELLED' && (slot.course || slot.reason)) {
-                        cancelled.push(entry);
-                    } else if (slot.course) {
-                        classes.push(entry);
-                    }
-                });
-            }
+                       if (!cell || cell.hidden) return; // skip merged child
+                       const entry = {
+                           year, semester: sem, timeSlot: timeSlot || `Slot ${cIdx + 1}`,
+                           course: cell.course, teacher: cell.teacher, room: cell.room,
+                           status: cell.status, reason: cell.reason,
+                           routineTitle: routine.title, routineAuthor: routine.author?.full_name, routineId: routine._id
+                       };
+                       if (cell.status === 'CANCELLED' && (cell.course || cell.reason)) cancelled.push(entry);
+                       else if (cell.course) classes.push(entry);
+                    });
+                }
+            });
         }
 
-        // Sort by time slot index
-        const sortBySlot = (a, b) => TIME_SLOTS.indexOf(a.timeSlot) - TIME_SLOTS.indexOf(b.timeSlot);
+        // Sort dynamically without hardcoded index arrays
+        const sortBySlot = (a, b) => parseInt(a.timeSlot) - parseInt(b.timeSlot);
         classes.sort(sortBySlot);
         cancelled.sort(sortBySlot);
 
