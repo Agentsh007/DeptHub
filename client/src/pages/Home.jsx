@@ -39,7 +39,7 @@ const Home = () => {
 
           <div className="hero-container animate-fade-up">
             <div className="hero-badge">🎓 University Department Platform</div>
-            <h1 className="hero-title" style={{ fontSize: '4.5rem', fontWeight: '900', color: 'white', letterSpacing: '-2px', marginBottom: '0.75rem' }}>
+            <h1 className="hero-title" style={{ fontSize: '6rem', fontWeight: '900', color: 'white', letterSpacing: '-2px', marginBottom: '0.75rem' }}>
               DeptHub
             </h1>
             <div className="hero-accent-line"></div>
