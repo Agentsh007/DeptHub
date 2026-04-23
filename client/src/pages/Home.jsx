@@ -92,10 +92,10 @@ const Home = () => {
         {/* ═══ STATS STRIP ═══ */}
         <div className="stats-strip">
           {[
-            { icon: <FaUsers size={18} color="#ea580c" />, num: "25+", label: "Faculty" },
-            { icon: <FaLayerGroup size={18} color="#3b82f6" />, num: "12", label: "Batches" },
-            { icon: <FaFileAlt size={18} color="#16a34a" />, num: "500+", label: "Documents" },
-            { icon: <FaCalendarAlt size={18} color="#f59e0b" />, num: "8", label: "Routines" },
+            { icon: <FaUsers size={18} color="#ea580c" />, num: "5+", label: "Faculty" },
+            { icon: <FaLayerGroup size={18} color="#3b82f6" />, num: "2", label: "Batches" },
+            { icon: <FaFileAlt size={18} color="#16a34a" />, num: "5+", label: "Documents" },
+            { icon: <FaCalendarAlt size={18} color="#f59e0b" />, num: "2", label: "Routines" },
           ].map((s, i) => (
             <div key={i} className="stat-item animate-fade-up" style={{ animationDelay: `${i * 0.1}s` }}>
               <div style={{ marginBottom: '0.35rem' }}>{s.icon}</div>
